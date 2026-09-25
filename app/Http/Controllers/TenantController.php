@@ -16,7 +16,10 @@ class TenantController extends Controller
             ->with(['activeTenancies.unit.property'])
             ->withCount('activeTenancies')
             ->when(!$user->isAdmin(), function ($query) use ($user) {
-                $query->whereHas('tenancies.unit.property', fn ($property) => $property->where('owner_id', $user->id));
+                $query->where(function ($query) use ($user) {
+                    $query->where('created_by', $user->id)
+                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('owner_id', $user->id));
+                });
             })
             ->when($request->search, function ($query, $search) {
                 $query->where(fn ($q) => $q

@@ -36,6 +36,14 @@ class UnitController extends Controller
 
         $unitTypes = UnitType::all();
         $tenants = \App\Models\Tenant::where('status', 'active')
+            ->when(!$request->user()->isAdmin(), function ($query) use ($request) {
+                $query->where(function ($query) use ($request) {
+                    $query->where('created_by', $request->user()->id)
+                        ->orWhereHas('tenancies.unit.property', function ($property) use ($request) {
+                            $property->where('owner_id', $request->user()->id);
+                        });
+                });
+            })
             ->when($request->tenant_search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")

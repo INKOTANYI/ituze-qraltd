@@ -10,6 +10,7 @@ class Tenant extends Model
     use HasFactory;
 
     protected $fillable = [
+        'created_by',
         'type',
         'name',
         'registration_number',
@@ -24,6 +25,11 @@ class Tenant extends Model
     public function tenancies()
     {
         return $this->hasMany(Tenancy::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function activeTenancies()

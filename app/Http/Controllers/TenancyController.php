@@ -38,7 +38,10 @@ class TenancyController extends Controller
             'address' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        Tenant::create($data + ['status' => 'active']);
+        Tenant::create($data + [
+            'created_by' => $request->user()->id,
+            'status' => 'active',
+        ]);
 
         return back()->with('success', 'Tenant created successfully.');
     }
