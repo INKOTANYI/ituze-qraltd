@@ -116,6 +116,11 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                                         {property.cell.name}, {property.cell.sector?.name}, {property.cell.sector?.district?.name}, {property.cell.sector?.district?.province?.name}
                                     </p>
                                 )}
+                                {property.owner && (
+                                    <p className="mt-1 text-sm text-[#0E3B2E]">
+                                        Created by: {property.owner.name || `${property.owner.first_name || ''} ${property.owner.last_name || ''}`.trim()}
+                                    </p>
+                                )}
                             </div>
                             {canEdit && (
                                 <div className="flex items-center gap-2">
@@ -137,7 +142,7 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                             )}
                         </div>
 
-                        <div className="mt-6 grid grid-cols-2 gap-3 rounded-xl bg-gray-50 p-4 md:grid-cols-5 md:gap-4">
+                        <div className="mt-6 grid grid-cols-2 gap-3 rounded-xl bg-gray-50 p-4 md:grid-cols-7 md:gap-4">
                             <div className="text-center">
                                 <p className="text-xs text-gray-500">Total Units</p>
                                 {(property.total_units !== null && property.total_units !== undefined) || property.units_count ? (
@@ -154,6 +159,18 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                                 ) : (
                                     <p className="text-2xl font-bold text-[#0E3B2E]">0</p>
                                 )}
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs text-gray-500">Size</p>
+                                <p className="text-2xl font-bold text-[#0E3B2E]">
+                                    {property.size_sqm !== null && property.size_sqm !== undefined ? `${Number(property.size_sqm).toLocaleString()} m²` : 'N/A'}
+                                </p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs text-gray-500">Rent / Month</p>
+                                <p className="text-2xl font-bold text-[#0E3B2E]">
+                                    {property.rent_amount !== null && property.rent_amount !== undefined ? Number(property.rent_amount).toLocaleString() : 'N/A'}
+                                </p>
                             </div>
                             <div className="text-center">
                                 <p className="text-xs text-gray-500">Floors</p>

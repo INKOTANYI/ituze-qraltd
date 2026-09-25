@@ -19,6 +19,10 @@ class Property extends Model
         'status',
         'total_units',
         'total_floors',
+        'bedrooms',
+        'bathrooms',
+        'size_sqm',
+        'rent_amount',
         'amenities',
         'proximity',
     ];
@@ -26,6 +30,10 @@ class Property extends Model
     protected $casts = [
         'total_units' => 'integer',
         'total_floors' => 'integer',
+        'bedrooms' => 'integer',
+        'bathrooms' => 'integer',
+        'size_sqm' => 'decimal:2',
+        'rent_amount' => 'decimal:2',
         'amenities' => 'array',
         'proximity' => 'array',
     ];

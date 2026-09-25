@@ -168,6 +168,11 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                                 {property.cell.name}, {property.cell.sector?.district?.name}
                                             </p>
                                         )}
+                                        {isAdmin && property.owner && (
+                                            <p className="mt-1 text-xs text-[#0E3B2E]">
+                                                Created by: {property.owner.name || `${property.owner.first_name || ''} ${property.owner.last_name || ''}`.trim()}
+                                            </p>
+                                        )}
                                         {(() => {
                                             const amenities = property.amenities;
                                             const rawKeys = amenities
@@ -219,6 +224,10 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                                         {Number(property.units_monthly_rent_sum).toLocaleString()} RWF/mo
                                                     </span>
                                                 ) : null}
+                                            </div>
+                                            <div className="flex items-center justify-between text-xs text-gray-500">
+                                                {property.size_sqm !== null && property.size_sqm !== undefined && <span>{Number(property.size_sqm).toLocaleString()} m²</span>}
+                                                {property.rent_amount !== null && property.rent_amount !== undefined && <span>{Number(property.rent_amount).toLocaleString()} RWF/mo</span>}
                                             </div>
                                             <div className="flex items-center justify-end gap-2">
                                                 <Link

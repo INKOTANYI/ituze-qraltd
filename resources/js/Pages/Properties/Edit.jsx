@@ -31,7 +31,7 @@ const PROXIMITY = [
 const getAmenitiesForType = (propertyTypeId, propertyTypes, fallbackTypeName) => {
     const selected = propertyTypes.find(p => String(p.id) === String(propertyTypeId));
     const typeName = selected?.name || fallbackTypeName || '';
-    const isApartment = typeName === 'Apartment';
+    const isApartment = typeName.toLowerCase() === 'apartment';
     if (isApartment) return ALL_AMENITIES;
     return ALL_AMENITIES.filter(a => BASIC_AMENITY_KEYS.includes(a.key));
 };
@@ -84,6 +84,10 @@ export default function PropertyEdit({ property, canEdit }) {
         status: property.status || 'active',
         total_units: property.total_units !== null && property.total_units !== undefined ? String(property.total_units) : '',
         total_floors: property.total_floors !== null && property.total_floors !== undefined ? String(property.total_floors) : '',
+        bedrooms: property.bedrooms !== null && property.bedrooms !== undefined ? String(property.bedrooms) : '',
+        bathrooms: property.bathrooms !== null && property.bathrooms !== undefined ? String(property.bathrooms) : '',
+        size_sqm: property.size_sqm !== null && property.size_sqm !== undefined ? String(property.size_sqm) : '',
+        rent_amount: property.rent_amount !== null && property.rent_amount !== undefined ? String(property.rent_amount) : '',
         amenities: buildInitialBooleans(property.amenities, ALL_AMENITIES.map(a => a.key), false),
         proximity: buildInitialBooleans(property.proximity, PROXIMITY.map(p => p.key), false),
         images: [],
@@ -318,8 +322,20 @@ export default function PropertyEdit({ property, canEdit }) {
         if (data.total_floors !== '' && data.total_floors !== null && data.total_floors !== undefined) {
             formData.append('total_floors', data.total_floors);
         }
+        if (isApartment && data.bedrooms !== '' && data.bedrooms !== null && data.bedrooms !== undefined) {
+            formData.append('bedrooms', data.bedrooms);
+        }
+        if (isApartment && data.bathrooms !== '' && data.bathrooms !== null && data.bathrooms !== undefined) {
+            formData.append('bathrooms', data.bathrooms);
+        }
+        if (data.size_sqm !== '' && data.size_sqm !== null && data.size_sqm !== undefined) {
+            formData.append('size_sqm', data.size_sqm);
+        }
+        if (data.rent_amount !== '' && data.rent_amount !== null && data.rent_amount !== undefined) {
+            formData.append('rent_amount', data.rent_amount);
+        }
 
-        ALL_AMENITIES.forEach(a => {
+        getAmenitiesForType(data.property_type_id, propertyTypes, property.property_type?.name).forEach(a => {
             formData.append(`amenities[${a.key}]`, data.amenities[a.key] ? '1' : '0');
         });
         PROXIMITY.forEach(p => {
@@ -346,6 +362,9 @@ export default function PropertyEdit({ property, canEdit }) {
             },
         });
     };
+
+    const isApartment = (propertyTypes.find(p => String(p.id) === String(data.property_type_id))?.name
+        || property.property_type?.name || '').toLowerCase() === 'apartment';
 
     return (
         <AuthenticatedLayout header="Edit Property">
@@ -445,6 +464,19 @@ export default function PropertyEdit({ property, canEdit }) {
                                         />
                                         {errors.total_units && <p className="mt-1 text-sm text-red-500">{errors.total_units}</p>}
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Property Size (m²)</label>
+                                            <input type="number" min="0" step="0.01" value={data.size_sqm} onChange={(e) => setData('size_sqm', e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15" placeholder="e.g., 200" />
+                                            {errors.size_sqm && <p className="mt-1 text-sm text-red-500">{errors.size_sqm}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Rent Amount (RWF / month)</label>
+                                            <input type="number" min="0" step="0.01" value={data.rent_amount} onChange={(e) => setData('rent_amount', e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15" placeholder="e.g., 500000" />
+                                            {errors.rent_amount && <p className="mt-1 text-sm text-red-500">{errors.rent_amount}</p>}
+                                        </div>
+                                    </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">
                                             Total Floors
@@ -461,6 +493,25 @@ export default function PropertyEdit({ property, canEdit }) {
                                         {errors.total_floors && <p className="mt-1 text-sm text-red-500">{errors.total_floors}</p>}
                                     </div>
                                 </div>
+
+                                {isApartment && (
+                                    <div className="rounded-2xl border border-[#0E3B2E]/10 bg-[#0E3B2E]/[0.03] p-4">
+                                        <p className="text-sm font-semibold text-[#0E3B2E]">Apartment details</p>
+                                        <p className="mt-1 text-xs text-gray-500">Add the room details renters use to compare apartments.</p>
+                                        <div className="mt-3 grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Number of Bedrooms</label>
+                                                <input type="number" min="0" value={data.bedrooms} onChange={(e) => setData('bedrooms', e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-[#0E3B2E] focus:ring-2 focus:ring-[#0E3B2E]/15" placeholder="e.g., 3" />
+                                                {errors.bedrooms && <p className="mt-1 text-sm text-red-500">{errors.bedrooms}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Number of Bathrooms</label>
+                                                <input type="number" min="0" value={data.bathrooms} onChange={(e) => setData('bathrooms', e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-[#0E3B2E] focus:ring-2 focus:ring-[#0E3B2E]/15" placeholder="e.g., 2" />
+                                                {errors.bathrooms && <p className="mt-1 text-sm text-red-500">{errors.bathrooms}</p>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div>
                                     <div className="flex items-center justify-between mb-2">

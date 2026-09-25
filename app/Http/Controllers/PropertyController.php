@@ -22,7 +22,7 @@ class PropertyController extends Controller
     {
         $user = $request->user();
         
-        $query = Property::with(['cell.sector.district.province', 'propertyType', 'images'])
+        $query = Property::with(['owner', 'cell.sector.district.province', 'propertyType', 'images'])
             ->withCount([
                 'units',
                 'units as units_vacant_count' => function ($q) { $q->where('status', 'vacant'); },
@@ -85,6 +85,10 @@ class PropertyController extends Controller
                     'status' => 'required|in:active,inactive',
                     'total_units' => 'nullable|integer|min:0',
                     'total_floors' => 'nullable|integer|min:1',
+                    'bedrooms' => 'nullable|integer|min:0',
+                    'bathrooms' => 'nullable|integer|min:0',
+                    'size_sqm' => 'nullable|numeric|min:0',
+                    'rent_amount' => 'nullable|numeric|min:0',
                     'amenities' => 'nullable|array',
                     'amenities.*' => 'boolean',
                     'proximity' => 'nullable|array',
@@ -118,6 +122,10 @@ class PropertyController extends Controller
                 'status' => $request->status,
                 'total_units' => $request->total_units,
                 'total_floors' => $request->total_floors,
+                'bedrooms' => $this->apartmentValue($request, 'bedrooms'),
+                'bathrooms' => $this->apartmentValue($request, 'bathrooms'),
+                'size_sqm' => $request->size_sqm,
+                'rent_amount' => $request->rent_amount,
                 'amenities' => $request->input('amenities'),
                 'proximity' => $request->input('proximity'),
             ]);
@@ -157,7 +165,7 @@ class PropertyController extends Controller
     {
         $this->authorizePropertyAccess($request->user(), $property);
 
-        $property->load(['cell.sector.district.province', 'propertyType', 'images', 'units.unitType']);
+        $property->load(['owner', 'cell.sector.district.province', 'propertyType', 'images', 'units.unitType']);
         $property->loadCount([
             'units as units_vacant_count' => function ($q) { $q->where('status', 'vacant'); },
             'units as units_occupied_count' => function ($q) { $q->where('status', 'occupied'); },
@@ -179,7 +187,7 @@ class PropertyController extends Controller
     {
         $this->authorizePropertyAccess($request->user(), $property);
 
-        $property->load(['cell.sector.district.province', 'propertyType', 'images']);
+        $property->load(['owner', 'cell.sector.district.province', 'propertyType', 'images']);
 
         return Inertia::render('Properties/Edit', [
             'property' => $property,
@@ -205,6 +213,10 @@ class PropertyController extends Controller
                 'status' => 'required|in:active,inactive',
                 'total_units' => 'nullable|integer|min:0',
                 'total_floors' => 'nullable|integer|min:1',
+                'bedrooms' => 'nullable|integer|min:0',
+                'bathrooms' => 'nullable|integer|min:0',
+                'size_sqm' => 'nullable|numeric|min:0',
+                'rent_amount' => 'nullable|numeric|min:0',
                 'amenities' => 'nullable|array',
                 'amenities.*' => 'boolean',
                 'proximity' => 'nullable|array',
@@ -233,6 +245,10 @@ class PropertyController extends Controller
             'status' => $request->status,
             'total_units' => $request->total_units,
             'total_floors' => $request->total_floors,
+            'bedrooms' => $this->apartmentValue($request, 'bedrooms'),
+            'bathrooms' => $this->apartmentValue($request, 'bathrooms'),
+            'size_sqm' => $request->size_sqm,
+            'rent_amount' => $request->rent_amount,
             'amenities' => $request->input('amenities'),
             'proximity' => $request->input('proximity'),
         ]);
@@ -289,5 +305,19 @@ class PropertyController extends Controller
         if (!$user->isAdmin() && $property->owner_id !== $user->id) {
             abort(403, 'You do not have permission to access this property.');
         }
+    }
+
+    /**
+     * Apartment-only attributes must never be stored on other property types.
+     */
+    private function apartmentValue(Request $request, string $field)
+    {
+        $type = $request->property_type_id
+            ? \App\Models\PropertyType::find($request->property_type_id)
+            : null;
+
+        return $type && strcasecmp($type->name, 'Apartment') === 0
+            ? $request->input($field)
+            : null;
     }
 }
