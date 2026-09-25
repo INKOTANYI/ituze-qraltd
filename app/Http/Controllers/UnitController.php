@@ -41,6 +41,10 @@ class UnitController extends Controller
                     $query->where('created_by', $request->user()->id)
                         ->orWhereHas('tenancies.unit.property', function ($property) use ($request) {
                             $property->where('owner_id', $request->user()->id);
+                        })
+                        ->orWhereHas('user', function ($user) {
+                            $user->where('role', 'tenant')
+                                ->where('status', 'approved');
                         });
                 });
             })

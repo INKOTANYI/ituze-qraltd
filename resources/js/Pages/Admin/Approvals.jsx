@@ -71,9 +71,12 @@ export default function Approvals({ pendingUsers }) {
                                     </div>
                                 )}
                                 <div>
-                                    <p className="font-[Sora] font-semibold text-gray-800">
-                                        {user.name}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-[Sora] font-semibold text-gray-800">{user.name}</p>
+                                        <span className="rounded-full bg-[#D9A441]/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#8a651c]">
+                                            {user.role}
+                                        </span>
+                                    </div>
                                     <p className="text-sm text-gray-500">
                                         {user.email} · {user.phone}
                                     </p>
@@ -128,7 +131,7 @@ export default function Approvals({ pendingUsers }) {
                 message={
                     confirmAction
                         ? confirmAction.type === 'approve'
-                            ? `${confirmAction.user.name} will get full access to their dashboard immediately.`
+                            ? `${confirmAction.user.name} will be approved as a ${confirmAction.user.role === 'tenant' ? 'tenant/customer' : 'property owner'} and can then be assigned to a property unit.`
                             : `${confirmAction.user.name} will not be able to access the dashboard. You can reconsider this later.`
                         : ''
                 }

@@ -11,6 +11,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'created_by',
+        'user_id',
         'type',
         'name',
         'registration_number',
@@ -30,6 +31,11 @@ class Tenant extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function activeTenancies()

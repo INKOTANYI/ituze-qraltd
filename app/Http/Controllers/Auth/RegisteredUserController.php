@@ -36,6 +36,7 @@ class RegisteredUserController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'account_type' => 'required|in:owner,tenant',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'phone' => ['required', 'regex:/^(078|072|073)\d{7}$/', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -49,7 +50,7 @@ class RegisteredUserController extends Controller
             'name' => $request->first_name.' '.$request->last_name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'role' => 'owner',
+            'role' => $request->account_type,
             'status' => 'pending',
             'expires_at' => now()->addYear(),
             'password' => Hash::make($request->password),
