@@ -62,4 +62,9 @@ class Property extends Model
     {
         return $this->hasMany(Unit::class);
     }
+
+    public function tenancies()
+    {
+        return $this->hasManyThrough(Tenancy::class, Unit::class);
+    }
 }

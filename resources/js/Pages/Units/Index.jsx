@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { Search, Plus, DoorOpen, Edit, Trash2, ArrowLeft, DollarSign, Home } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -9,10 +9,14 @@ const statusStyles = {
     maintenance: 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/10',
 };
 
-export default function UnitsIndex({ property, units, unitTypes, filters }) {
+export default function UnitsIndex({ property, units, unitTypes, filters, tenants = [] }) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [unitToDelete, setUnitToDelete] = useState(null);
+    const [unitToAssign, setUnitToAssign] = useState(null);
+    const [showTenantForm, setShowTenantForm] = useState(false);
+    const assignmentForm = useForm({ tenant_id: '', start_date: '', end_date: '', monthly_rent: '', deposit_amount: '', notes: '' });
+    const tenantForm = useForm({ type: 'individual', name: '', registration_number: '', contact_person: '', national_id: '', email: '', phone: '', address: '' });
     const isFirstRender = useRef(true);
 
     useEffect(() => {
@@ -34,6 +38,26 @@ export default function UnitsIndex({ property, units, unitTypes, filters }) {
         });
     };
 
+    const openAssignment = (unit) => {
+        setUnitToAssign(unit);
+        assignmentForm.setData('monthly_rent', unit.rent_amount || '');
+    };
+
+    const assignTenant = (e) => {
+        e.preventDefault();
+        assignmentForm.post(route('properties.units.tenancy.store', [property, unitToAssign]), {
+            onSuccess: () => { setUnitToAssign(null); assignmentForm.reset(); },
+        });
+    };
+
+    const createTenant = (e) => {
+        e.preventDefault();
+        tenantForm.post(route('properties.tenants.store', property), {
+            preserveScroll: true,
+            onSuccess: () => { setShowTenantForm(false); tenantForm.reset(); },
+        });
+    };
+
     return (
         <AuthenticatedLayout header={`${property.name} - Units`}>
             <Head title={`${property.name} - Units`} />
@@ -50,6 +74,12 @@ export default function UnitsIndex({ property, units, unitTypes, filters }) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowTenantForm(true)}
+                        className="rounded-xl border border-[#0E3B2E] px-4 py-2.5 text-sm font-medium text-[#0E3B2E] transition-colors hover:bg-[#0E3B2E]/5"
+                    >
+                        New Tenant
+                    </button>
                     <div className="relative flex-1 max-w-xs">
                         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
@@ -110,6 +140,7 @@ export default function UnitsIndex({ property, units, unitTypes, filters }) {
                                         <th className="px-5 py-3 font-semibold">Rent</th>
                                         <th className="px-5 py-3 font-semibold">Size</th>
                                         <th className="px-5 py-3 font-semibold">Status</th>
+                                        <th className="px-5 py-3 font-semibold">Tenant</th>
                                         <th className="px-5 py-3 font-semibold text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -167,8 +198,16 @@ export default function UnitsIndex({ property, units, unitTypes, filters }) {
                                                     {unit.status}
                                                 </span>
                                             </td>
+                                            <td className="px-5 py-3.5 text-gray-600">
+                                                {unit.active_tenancy?.tenant?.name || <span className="text-gray-400">—</span>}
+                                            </td>
                                             <td className="px-5 py-3.5 text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    {unit.status === 'vacant' && (
+                                                        <button onClick={() => openAssignment(unit)} className="rounded-lg bg-[#0E3B2E]/10 px-2.5 py-1.5 text-xs font-medium text-[#0E3B2E] hover:bg-[#0E3B2E]/20">
+                                                            Assign tenant
+                                                        </button>
+                                                    )}
                                                     <Link
                                                         href={route('properties.units.edit', [property, unit])}
                                                         className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100"
@@ -182,6 +221,43 @@ export default function UnitsIndex({ property, units, unitTypes, filters }) {
                                                         <Trash2 size={14} />
                                                     </button>
                                                 </div>
+
+                                                {unitToAssign && (
+                                                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                                                        <form onSubmit={assignTenant} className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                                                            <h3 className="text-lg font-semibold text-gray-900">Assign tenant to {unitToAssign.unit_number}</h3>
+                                                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                                                <label className="sm:col-span-2 text-sm font-medium text-gray-700">Tenant
+                                                                    <select value={assignmentForm.data.tenant_id} onChange={e => assignmentForm.setData('tenant_id', e.target.value)} required className="mt-1 w-full rounded-xl border-gray-200">
+                                                                        <option value="">Select tenant</option>
+                                                                        {tenants.map(tenant => <option key={tenant.id} value={tenant.id}>{tenant.name} ({tenant.type})</option>)}
+                                                                    </select>
+                                                                </label>
+                                                                <label className="text-sm font-medium text-gray-700">Start date<input type="date" required value={assignmentForm.data.start_date} onChange={e => assignmentForm.setData('start_date', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label>
+                                                                <label className="text-sm font-medium text-gray-700">End date<input type="date" value={assignmentForm.data.end_date} onChange={e => assignmentForm.setData('end_date', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label>
+                                                                <label className="text-sm font-medium text-gray-700">Monthly rent<input type="number" min="0" step="0.01" required value={assignmentForm.data.monthly_rent} onChange={e => assignmentForm.setData('monthly_rent', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label>
+                                                                <label className="text-sm font-medium text-gray-700">Deposit<input type="number" min="0" step="0.01" value={assignmentForm.data.deposit_amount} onChange={e => assignmentForm.setData('deposit_amount', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label>
+                                                            </div>
+                                                            <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setUnitToAssign(null)} className="rounded-xl px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Cancel</button><button disabled={assignmentForm.processing} className="rounded-xl bg-[#0E3B2E] px-4 py-2 text-sm font-medium text-white">Assign tenant</button></div>
+                                                        </form>
+                                                    </div>
+                                                )}
+
+                                                {showTenantForm && (
+                                                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                                                        <form onSubmit={createTenant} className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                                                            <h3 className="text-lg font-semibold text-gray-900">Create tenant</h3>
+                                                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                                                <label className="text-sm font-medium text-gray-700">Type<select value={tenantForm.data.type} onChange={e => tenantForm.setData('type', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200"><option value="individual">Individual</option><option value="company">Company</option></select></label>
+                                                                <label className="text-sm font-medium text-gray-700">Name<input required value={tenantForm.data.name} onChange={e => tenantForm.setData('name', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label>
+                                                                <label className="text-sm font-medium text-gray-700">Email<input type="email" value={tenantForm.data.email} onChange={e => tenantForm.setData('email', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label>
+                                                                <label className="text-sm font-medium text-gray-700">Phone<input value={tenantForm.data.phone} onChange={e => tenantForm.setData('phone', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label>
+                                                                {tenantForm.data.type === 'individual' ? <label className="text-sm font-medium text-gray-700">National ID<input required value={tenantForm.data.national_id} onChange={e => tenantForm.setData('national_id', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label> : <><label className="text-sm font-medium text-gray-700">Registration number<input required value={tenantForm.data.registration_number} onChange={e => tenantForm.setData('registration_number', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label><label className="text-sm font-medium text-gray-700">Contact person<input required value={tenantForm.data.contact_person} onChange={e => tenantForm.setData('contact_person', e.target.value)} className="mt-1 w-full rounded-xl border-gray-200" /></label></>}
+                                                            </div>
+                                                            <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setShowTenantForm(false)} className="rounded-xl px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Cancel</button><button disabled={tenantForm.processing} className="rounded-xl bg-[#0E3B2E] px-4 py-2 text-sm font-medium text-white">Create tenant</button></div>
+                                                        </form>
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

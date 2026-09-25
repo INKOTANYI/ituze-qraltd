@@ -33,4 +33,14 @@ class Unit extends Model
     {
         return $this->belongsTo(UnitType::class);
     }
+
+    public function tenancies()
+    {
+        return $this->hasMany(Tenancy::class);
+    }
+
+    public function activeTenancy()
+    {
+        return $this->hasOne(Tenancy::class)->where('status', 'active');
+    }
 }

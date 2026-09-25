@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileCompletionController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UnitController;
+use App\Http\Controllers\TenancyController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -67,7 +68,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/{unit}/edit', [UnitController::class, 'edit'])->name('edit');
             Route::put('/{unit}', [UnitController::class, 'update'])->name('update');
             Route::delete('/{unit}', [UnitController::class, 'destroy'])->name('destroy');
+            Route::post('/{unit}/tenancy', [TenancyController::class, 'store'])->name('tenancy.store');
         });
+        Route::post('/{property}/tenants', [TenancyController::class, 'storeTenant'])->name('tenants.store');
     });
 
     Route::post('/api/ai/generate-property-description', [\App\Http\Controllers\AIDescriptionController::class, 'generatePropertyDescription'])->name('api.ai.generate-property-description');

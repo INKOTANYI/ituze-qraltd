@@ -22,7 +22,7 @@ class UnitController extends Controller
     {
         $this->authorizePropertyAccess($request->user(), $property);
 
-        $units = Unit::with('unitType')
+        $units = Unit::with(['unitType', 'activeTenancy.tenant'])
             ->where('property_id', $property->id)
             ->when($request->status, function ($query, $status) {
                 return $query->where('status', $status);
@@ -35,11 +35,23 @@ class UnitController extends Controller
             ->withQueryString();
 
         $unitTypes = UnitType::all();
+        $tenants = \App\Models\Tenant::where('status', 'active')
+            ->when($request->tenant_search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('name')
+            ->limit(100)
+            ->get(['id', 'type', 'name', 'email', 'phone', 'registration_number']);
 
         return Inertia::render('Units/Index', [
             'property' => $property->load('cell.sector.district.province'),
             'units' => $units,
             'unitTypes' => $unitTypes,
+            'tenants' => $tenants,
             'filters' => [
                 'status' => $request->status,
                 'search' => $request->search,
@@ -116,7 +128,7 @@ class UnitController extends Controller
             abort(404);
         }
 
-        $unit->load('unitType', 'property');
+        $unit->load('unitType', 'property', 'activeTenancy.tenant');
 
         return Inertia::render('Units/Show', [
             'property' => $property,
