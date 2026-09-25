@@ -35,7 +35,6 @@ export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
         first_name: '',
         last_name: '',
-        account_type: 'owner',
         email: '',
         phone: '',
         password: '',
@@ -101,25 +100,6 @@ export default function Register() {
             </div>
 
             <form onSubmit={submit} className="mt-7 space-y-5">
-                <div>
-                    <label htmlFor="account_type" className="mb-1.5 block text-sm font-medium text-gray-700">
-                        I want to register as
-                    </label>
-                    <select
-                        id="account_type"
-                        name="account_type"
-                        value={data.account_type}
-                        onChange={(e) => setData('account_type', e.target.value)}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm text-gray-800 transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                    >
-                        <option value="owner">Property owner / manager</option>
-                        <option value="tenant">Tenant / customer</option>
-                    </select>
-                    <p className="mt-1.5 text-xs text-gray-500">
-                        Tenant accounts must be approved by an administrator before assignment to an office, apartment, or other property unit.
-                    </p>
-                    <InputError message={errors.account_type} className="mt-1" />
-                </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label

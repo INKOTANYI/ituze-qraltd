@@ -88,14 +88,6 @@
             font-size: 10px;
             font-weight: bold;
         }
-        .role-tenant {
-            background-color: #f3f4f6;
-            color: #374151;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: bold;
-        }
         .footer {
             margin-top: 30px;
             text-align: center;

@@ -22,7 +22,6 @@ const statusStyles = {
 const roleStyles = {
     admin: 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10',
     owner: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10',
-    tenant: 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10',
 };
 
 function formatDate(value) {
@@ -194,7 +193,6 @@ export default function Users({ users, filters }) {
                         >
                             <option value="">All roles</option>
                             <option value="owner">Owner</option>
-                            <option value="tenant">Tenant</option>
                             <option value="admin">Admin</option>
                         </select>
 

@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Notifications\NewOwnerRegistered;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -36,7 +34,6 @@ class RegisteredUserController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'account_type' => 'required|in:owner,tenant',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'phone' => ['required', 'regex:/^(078|072|073)\d{7}$/', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -50,7 +47,7 @@ class RegisteredUserController extends Controller
             'name' => $request->first_name.' '.$request->last_name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'role' => $request->account_type,
+            'role' => 'owner',
             'status' => 'pending',
             'expires_at' => now()->addYear(),
             'password' => Hash::make($request->password),

@@ -76,9 +76,14 @@ class TenancyController extends Controller
                 ]);
             }
 
-            $tenant = Tenant::whereKey($data['tenant_id'])
-                ->where('status', 'active')
-                ->first();
+            $tenantQuery = Tenant::whereKey($data['tenant_id'])->where('status', 'active');
+            if (!$request->user()->isAdmin()) {
+                $tenantQuery->where(function ($query) use ($request) {
+                    $query->where('created_by', $request->user()->id)
+                        ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('owner_id', $request->user()->id));
+                });
+            }
+            $tenant = $tenantQuery->first();
             if (!$tenant) {
                 throw ValidationException::withMessages([
                     'tenant_id' => 'The selected tenant is not active.',

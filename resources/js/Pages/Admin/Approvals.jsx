@@ -131,7 +131,7 @@ export default function Approvals({ pendingUsers }) {
                 message={
                     confirmAction
                         ? confirmAction.type === 'approve'
-                            ? `${confirmAction.user.name} will be approved as a ${confirmAction.user.role === 'tenant' ? 'tenant/customer' : 'property owner'} and can then be assigned to a property unit.`
+                            ? `${confirmAction.user.name} will be approved as a property owner.`
                             : `${confirmAction.user.name} will not be able to access the dashboard. You can reconsider this later.`
                         : ''
                 }

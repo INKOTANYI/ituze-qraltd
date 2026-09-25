@@ -13,7 +13,7 @@ class ApprovalController extends Controller
 {
     public function index(): Response
     {
-        $pending = User::whereIn('role', ['owner', 'tenant'])
+        $pending = User::where('role', 'owner')
             ->where('status', 'pending')
             ->where('profile_completed', true)
             ->with('sector.district.province')
@@ -27,28 +27,14 @@ class ApprovalController extends Controller
 
     public function approve(Request $request, User $user): RedirectResponse
     {
+        abort_unless($user->role === 'owner', 404);
         $user->update(['status' => 'approved']);
-
-        if ($user->role === 'tenant') {
-            $user->tenantProfile()->updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'created_by' => $request->user()->id,
-                    'type' => 'individual',
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'national_id' => $user->national_id,
-                    'status' => 'active',
-                ],
-            );
-        }
-
-        return back()->with('status', 'Account approved and tenant profile created.');
+        return back()->with('status', 'Owner account approved.');
     }
 
     public function reject(User $user): RedirectResponse
     {
+        abort_unless($user->role === 'owner', 404);
         $user->update(['status' => 'rejected']);
 
         return back()->with('status', 'Account rejected.');

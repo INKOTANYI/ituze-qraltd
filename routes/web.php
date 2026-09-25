@@ -112,6 +112,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware(['verified', 'profile.complete'])->get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
+    Route::middleware(['verified', 'profile.complete'])->post('/tenants', [TenantController::class, 'store'])->name('tenants.store');
 
     Route::post('/api/ai/generate-property-description', [\App\Http\Controllers\AIDescriptionController::class, 'generatePropertyDescription'])->name('api.ai.generate-property-description');
 });

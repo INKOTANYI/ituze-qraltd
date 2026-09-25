@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('phone')->unique()->nullable()->after('email');
             $table->timestamp('phone_verified_at')->nullable()->after('phone');
-            $table->enum('role', ['owner', 'tenant', 'admin'])->default('tenant')->after('phone_verified_at');
+            $table->enum('role', ['owner', 'admin'])->default('owner')->after('phone_verified_at');
             $table->string('national_id')->nullable()->after('role');
             $table->string('profile_photo')->nullable()->after('national_id');
             $table->boolean('profile_completed')->default(false)->after('profile_photo');

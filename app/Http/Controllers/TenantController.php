@@ -6,9 +6,31 @@ use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
 
 class TenantController extends Controller
 {
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'type' => ['required', 'in:individual,company'],
+            'name' => ['required', 'string', 'max:255'],
+            'registration_number' => ['nullable', 'required_if:type,company', 'string', 'max:100'],
+            'contact_person' => ['nullable', 'required_if:type,company', 'string', 'max:255'],
+            'national_id' => ['nullable', 'required_if:type,individual', 'string', 'max:100'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'address' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        Tenant::create($data + [
+            'created_by' => $request->user()->id,
+            'status' => 'active',
+        ]);
+
+        return back()->with('success', 'Tenant created successfully.');
+    }
+
     public function index(Request $request): Response
     {
         $user = $request->user();
