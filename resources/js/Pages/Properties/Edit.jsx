@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InlineAlert from '@/Components/InlineAlert';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ArrowLeft, Upload, X, Trash2, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -103,6 +103,7 @@ export default function PropertyEdit({ property, canEdit }) {
     const [bannerMsg, setBannerMsg] = useState(null);
     const [bannerType, setBannerType] = useState('info');
     const [generatingDescription, setGeneratingDescription] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         fetch('/api/provinces')
@@ -302,14 +303,21 @@ export default function PropertyEdit({ property, canEdit }) {
         }
 
         const formData = new FormData();
+        formData.append('_method', 'put');
         formData.append('name', data.name);
         formData.append('address', data.address);
-        formData.append('description', data.description);
+        formData.append('description', data.description || '');
         formData.append('cell_id', data.cell_id);
-        formData.append('property_type_id', data.property_type_id);
+        if (data.property_type_id) {
+            formData.append('property_type_id', data.property_type_id);
+        }
         formData.append('status', data.status);
-        if (data.total_units !== '') formData.append('total_units', data.total_units);
-        if (data.total_floors !== '') formData.append('total_floors', data.total_floors);
+        if (data.total_units !== '' && data.total_units !== null && data.total_units !== undefined) {
+            formData.append('total_units', data.total_units);
+        }
+        if (data.total_floors !== '' && data.total_floors !== null && data.total_floors !== undefined) {
+            formData.append('total_floors', data.total_floors);
+        }
 
         ALL_AMENITIES.forEach(a => {
             formData.append(`amenities[${a.key}]`, data.amenities[a.key] ? '1' : '0');
@@ -326,7 +334,17 @@ export default function PropertyEdit({ property, canEdit }) {
             formData.append(`delete_images[${index}]`, imageId);
         });
 
-        put(route('properties.update', property), formData);
+        setIsSubmitting(true);
+        router.post(route('properties.update', property.id), formData, {
+            onFinish: () => setIsSubmitting(false),
+            onError: (errs) => {
+                if (errs && Object.keys(errs).length > 0) {
+                    const firstErr = Object.values(errs)[0];
+                    setBannerMsg(`⚠️ ${firstErr}`);
+                    setBannerType('warning');
+                }
+            },
+        });
     };
 
     return (
@@ -712,11 +730,11 @@ export default function PropertyEdit({ property, canEdit }) {
                         </Link>
                         <button
                             type="submit"
-                            disabled={processing || generatingDescription}
+                            disabled={processing || isSubmitting || generatingDescription}
                             className="rounded-xl bg-[#0E3B2E] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0a2e23] disabled:opacity-50"
                         >
-                            {processing && <Loader2 size={16} className="animate-spin inline mr-2" />}
-                            {processing ? 'Updating...' : 'Update Property'}
+                            {(processing || isSubmitting) && <Loader2 size={16} className="animate-spin inline mr-2" />}
+                            {(processing || isSubmitting) ? 'Updating...' : 'Update Property'}
                         </button>
                     </div>
                 </form>

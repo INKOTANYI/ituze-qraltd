@@ -48,8 +48,8 @@ Route::middleware('auth')->group(function () {
         return response()->json(\App\Models\PropertyType::all(['id', 'name']));
     })->name('api.property-types');
 
-    // Property management routes
-    Route::prefix('properties')->name('properties.')->group(function () {
+    // Property management routes (requires verified email and completed profile)
+    Route::middleware(['verified', 'profile.complete'])->prefix('properties')->name('properties.')->group(function () {
         Route::get('/', [PropertyController::class, 'index'])->name('index');
         Route::get('/create', [PropertyController::class, 'create'])->name('create');
         Route::post('/', [PropertyController::class, 'store'])->name('store');

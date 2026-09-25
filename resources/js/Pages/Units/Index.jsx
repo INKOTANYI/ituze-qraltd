@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Search, Plus, DoorOpen, Edit, Trash2, ArrowLeft, DollarSign, Home } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const statusStyles = {
     vacant: 'bg-green-50 text-green-700 ring-1 ring-green-600/10',
@@ -13,8 +13,14 @@ export default function UnitsIndex({ property, units, unitTypes, filters }) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [unitToDelete, setUnitToDelete] = useState(null);
+    const isFirstRender = useRef(true);
 
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+
         const timeout = setTimeout(() => {
             router.get(route('properties.units.index', property), { search, status }, { preserveState: true, replace: true });
         }, 400);

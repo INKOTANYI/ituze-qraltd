@@ -108,6 +108,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_otp_expires_at' => now()->addMinutes(10),
         ])->save();
 
-        $this->notify(new EmailVerificationOtp($code));
+        try {
+            $this->notify(new EmailVerificationOtp($code));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Verification email could not be sent: ' . $e->getMessage());
+        }
     }
 }

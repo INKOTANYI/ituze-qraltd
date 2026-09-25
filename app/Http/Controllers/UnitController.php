@@ -13,10 +13,7 @@ use Inertia\Response;
 
 class UnitController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'verified']);
-    }
+    // Middleware is handled in routes/web.php
 
     /**
      * Display a listing of units for a property.
