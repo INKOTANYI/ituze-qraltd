@@ -12,9 +12,15 @@ class TenantController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        abort_unless($request->user() && in_array($request->user()->role, ['admin', 'owner'], true), 403);
         $data = $request->validate([
             'type' => ['required', 'in:individual,company'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['nullable', 'required_without_all:first_name,company_name', 'string', 'max:255'],
+            'first_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'identity_type' => ['nullable', 'in:national_id,passport'],
+            'identity_number' => ['nullable', 'string', 'max:100'],
             'registration_number' => ['nullable', 'required_if:type,company', 'string', 'max:100'],
             'contact_person' => ['nullable', 'required_if:type,company', 'string', 'max:255'],
             'national_id' => ['nullable', 'required_if:type,individual', 'string', 'max:100'],
@@ -24,6 +30,7 @@ class TenantController extends Controller
         ]);
 
         Tenant::create($data + [
+            'name' => $data['company_name'] ?? trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? '')) ?: ($data['name'] ?? null),
             'created_by' => $request->user()->id,
             'status' => 'active',
         ]);
@@ -34,6 +41,7 @@ class TenantController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+        abort_unless($user && in_array($user->role, ['admin', 'owner'], true), 403);
         $query = Tenant::query()
             ->with(['activeTenancies.unit.property'])
             ->withCount('activeTenancies')

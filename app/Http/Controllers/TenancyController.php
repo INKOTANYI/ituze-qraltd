@@ -25,6 +25,7 @@ class TenancyController extends Controller
      */
     public function storeTenant(Request $request, Property $property): RedirectResponse
     {
+        $this->authorizeManager($request->user());
         $this->authorizePropertyAccess($request->user(), $property);
 
         $data = $request->validate([
@@ -51,19 +52,32 @@ class TenancyController extends Controller
      */
     public function store(Request $request, Property $property, Unit $unit): RedirectResponse
     {
+        $this->authorizeManager($request->user());
         $this->authorizePropertyAccess($request->user(), $property);
 
         if ($unit->property_id !== $property->id) {
             abort(404);
         }
 
+        $request->merge(['tenant_type' => $request->input('tenant_type', $request->input('type'))]);
         $data = $request->validate([
-            'tenant_id' => ['required', 'exists:tenants,id'],
+            'tenant_id' => ['nullable', 'exists:tenants,id'],
+            'tenant_type' => ['required_without:tenant_id', 'in:individual,company'],
+            'first_name' => ['required_if:tenant_type,individual', 'nullable', 'string', 'max:255'],
+            'last_name' => ['required_if:tenant_type,individual', 'nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'identity_type' => ['required_if:tenant_type,individual', 'nullable', 'in:national_id,passport'],
+            'identity_number' => ['required_if:tenant_type,individual', 'nullable', 'string', 'max:100'],
+            'company_name' => ['required_if:tenant_type,company', 'nullable', 'string', 'max:255'],
+            'registration_number' => ['required_if:tenant_type,company', 'nullable', 'string', 'max:100'],
+            'contact_person' => ['required_if:tenant_type,company', 'nullable', 'string', 'max:255'],
             'start_date' => ['required', 'date'],
-            'end_date' => ['nullable', 'date', 'after:start_date'],
+            'end_date' => ['required', 'date', 'after:start_date'],
             'monthly_rent' => ['required', 'numeric', 'min:0'],
             'deposit_amount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:5000'],
+            'lease' => ['required', 'file', 'mimes:' . self::LEASE_MIMES, 'max:' . self::LEASE_MAX_KB],
         ]);
 
         DB::transaction(function () use ($data, $request, $unit) {
@@ -76,8 +90,29 @@ class TenancyController extends Controller
                 ]);
             }
 
-            $tenantQuery = Tenant::whereKey($data['tenant_id'])->where('status', 'active');
-            if (!$request->user()->isAdmin()) {
+            if (!empty($data['tenant_id'])) {
+                $tenantQuery = Tenant::whereKey($data['tenant_id'])->where('status', 'active');
+            } else {
+                $tenant = Tenant::create([
+                    'created_by' => $request->user()->id,
+                    'type' => $data['tenant_type'],
+                    'name' => $data['tenant_type'] === 'company'
+                        ? $data['company_name']
+                        : trim($data['first_name'] . ' ' . $data['last_name']),
+                    'first_name' => $data['first_name'] ?? null,
+                    'last_name' => $data['last_name'] ?? null,
+                    'company_name' => $data['company_name'] ?? null,
+                    'registration_number' => $data['registration_number'] ?? null,
+                    'contact_person' => $data['contact_person'] ?? null,
+                    'identity_type' => $data['identity_type'] ?? null,
+                    'identity_number' => $data['identity_number'] ?? null,
+                    'email' => $data['email'] ?? null,
+                    'phone' => $data['phone'] ?? null,
+                    'status' => 'active',
+                ]);
+                $tenantQuery = Tenant::whereKey($tenant->id);
+            }
+            if (!$request->user()->isAdmin() && isset($tenantQuery)) {
                 $tenantQuery->where(function ($query) use ($request) {
                     $query->where('created_by', $request->user()->id)
                         ->orWhereHas('tenancies.unit.property', fn ($property) => $property->where('owner_id', $request->user()->id));
@@ -90,7 +125,7 @@ class TenancyController extends Controller
                 ]);
             }
 
-            Tenancy::create([
+            $tenancy = Tenancy::create([
                 'unit_id' => $lockedUnit->id,
                 'tenant_id' => $tenant->id,
                 'assigned_by' => $request->user()->id,
@@ -102,6 +137,15 @@ class TenancyController extends Controller
                 'status' => 'active',
             ]);
 
+            $file = $data['lease'];
+            $path = $file->store('leases/' . $tenancy->id, 'local');
+            $tenancy->leases()->create([
+                'uploaded_by' => $request->user()->id,
+                'original_name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+            ]);
             $lockedUnit->update(['status' => 'occupied']);
         });
 
@@ -184,6 +228,14 @@ class TenancyController extends Controller
     {
         if (!$user->isAdmin() && $property->owner_id !== $user->id) {
             abort(403, 'You do not have permission to access this property.');
+        }
+
+    }
+
+    private function authorizeManager($user): void
+    {
+        if (!$user || !in_array($user->role, ['admin', 'owner'], true)) {
+            abort(403, 'Only administrators and owners can manage tenancies.');
         }
     }
 }
