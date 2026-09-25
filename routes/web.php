@@ -69,6 +69,9 @@ Route::middleware('auth')->group(function () {
             Route::put('/{unit}', [UnitController::class, 'update'])->name('update');
             Route::delete('/{unit}', [UnitController::class, 'destroy'])->name('destroy');
             Route::post('/{unit}/tenancy', [TenancyController::class, 'store'])->name('tenancy.store');
+            Route::post('/{unit}/tenancy/{tenancy}/leases', [TenancyController::class, 'uploadLease'])->name('tenancy.leases.store');
+            Route::get('/{unit}/tenancy/{tenancy}/leases/{lease}', [TenancyController::class, 'downloadLease'])->name('tenancy.leases.download');
+            Route::delete('/{unit}/tenancy/{tenancy}/leases/{lease}', [TenancyController::class, 'deleteLease'])->name('tenancy.leases.destroy');
         });
         Route::post('/{property}/tenants', [TenancyController::class, 'storeTenant'])->name('tenants.store');
     });

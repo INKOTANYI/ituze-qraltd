@@ -128,7 +128,7 @@ class UnitController extends Controller
             abort(404);
         }
 
-        $unit->load('unitType', 'property', 'activeTenancy.tenant');
+        $unit->load('unitType', 'property', 'activeTenancy.tenant', 'activeTenancy.leases');
 
         return Inertia::render('Units/Show', [
             'property' => $property,

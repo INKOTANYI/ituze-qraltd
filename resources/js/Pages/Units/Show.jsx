@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Home, DollarSign, Edit, MapPin } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft, Home, DollarSign, Edit, MapPin, Upload, Download, Trash2, FileText } from 'lucide-react';
 
 const statusStyles = {
     vacant: 'bg-green-50 text-green-700 ring-1 ring-green-600/10',
@@ -9,6 +9,19 @@ const statusStyles = {
 };
 
 export default function UnitShow({ property, unit }) {
+    const tenancy = unit.active_tenancy;
+    const leaseForm = useForm({ lease: null, notes: '' });
+
+    const submitLease = (event) => {
+        event.preventDefault();
+        leaseForm.post(route('properties.units.tenancy.leases.store', [property, unit, tenancy.id]), {
+            forceFormData: true,
+            onSuccess: () => leaseForm.reset(),
+        });
+    };
+
+    const formatSize = (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+
     return (
         <AuthenticatedLayout header={`${unit.unit_number} - Details`}>
             <Head title={`Unit ${unit.unit_number}`} />
@@ -112,6 +125,32 @@ export default function UnitShow({ property, unit }) {
                             </div>
                         )}
                     </div>
+                                {tenancy && (
+                                    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                                        <div className="border-b border-gray-100 p-6">
+                                            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Tenancy & leases</h3>
+                                            <p className="mt-1 text-sm text-gray-700">{tenancy.tenant?.name} · Started {tenancy.start_date}</p>
+                                        </div>
+                                        <form onSubmit={submitLease} className="space-y-3 border-b border-gray-100 p-6">
+                                            <label className="block text-sm font-medium text-gray-700">Upload lease</label>
+                                            <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={(e) => leaseForm.setData('lease', e.target.files[0])} className="block w-full text-sm text-gray-600" required />
+                                            <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, JPEG or PNG. Maximum 10 MB.</p>
+                                            <input type="text" value={leaseForm.data.notes} onChange={(e) => leaseForm.setData('notes', e.target.value)} placeholder="Optional note" className="w-full rounded-lg border-gray-300 text-sm" />
+                                            {leaseForm.errors.lease && <p className="text-sm text-red-600">{leaseForm.errors.lease}</p>}
+                                            <button disabled={leaseForm.processing} className="inline-flex items-center gap-2 rounded-xl bg-[#0E3B2E] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                                                <Upload size={15} /> {leaseForm.processing ? 'Uploading…' : 'Upload lease'}
+                                            </button>
+                                        </form>
+                                        <div className="divide-y divide-gray-100">
+                                            {tenancy.leases?.length ? tenancy.leases.map((lease) => (
+                                                <div key={lease.id} className="flex items-center justify-between gap-3 p-4">
+                                                    <div className="flex min-w-0 items-center gap-3"><FileText size={18} className="shrink-0 text-gray-400" /><div className="min-w-0"><p className="truncate text-sm font-medium text-gray-900">{lease.original_name}</p><p className="text-xs text-gray-500">{formatSize(lease.size)}</p></div></div>
+                                                    <div className="flex shrink-0 items-center gap-2"><a href={route('properties.units.tenancy.leases.download', [property, unit, tenancy.id, lease.id])} className="rounded-lg p-2 text-[#0E3B2E] hover:bg-gray-100" aria-label={`Download ${lease.original_name}`}><Download size={16} /></a><Link as="button" method="delete" href={route('properties.units.tenancy.leases.destroy', [property, unit, tenancy.id, lease.id])} className="rounded-lg p-2 text-red-600 hover:bg-red-50" aria-label={`Delete ${lease.original_name}`}><Trash2 size={16} /></Link></div>
+                                                </div>
+                                            )) : <p className="p-6 text-sm text-gray-500">No leases uploaded yet.</p>}
+                                        </div>
+                                    </div>
+                                )}
                 </div>
 
                 <div className="space-y-6">

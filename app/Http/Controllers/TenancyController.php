@@ -9,10 +9,17 @@ use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TenancyController extends Controller
 {
+    private const LEASE_MAX_KB = 10240;
+
+    private const LEASE_MIMES = 'pdf,doc,docx,jpg,jpeg,png';
+
     /**
      * Create a tenant that can be assigned to a unit owned by the current user.
      */
@@ -92,6 +99,77 @@ class TenancyController extends Controller
 
         return redirect()->route('properties.units.index', $property)
             ->with('success', 'Tenant assigned and unit marked occupied.');
+    }
+
+    public function uploadLease(Request $request, Property $property, Unit $unit, Tenancy $tenancy): RedirectResponse
+    {
+        $this->authorizeTenancyAccess($request->user(), $property, $unit, $tenancy);
+
+        try {
+            $data = $request->validate([
+                'lease' => ['required', 'file', 'mimes:' . self::LEASE_MIMES, 'max:' . self::LEASE_MAX_KB],
+                'notes' => ['nullable', 'string', 'max:1000'],
+            ]);
+            $file = $data['lease'];
+            $path = $file->store('leases/' . $tenancy->id, 'local');
+            $tenancy->leases()->create([
+                'uploaded_by' => $request->user()->id,
+                'original_name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'notes' => $data['notes'] ?? null,
+            ]);
+            return back()->with('success', 'Lease uploaded successfully.');
+        } catch (ValidationException $e) {
+            Log::warning('Lease upload validation failed.', ['user_id' => $request->user()->id, 'tenancy_id' => $tenancy->id, 'errors' => $e->errors()]);
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Lease upload failed.', ['user_id' => $request->user()->id, 'tenancy_id' => $tenancy->id, 'error' => $e->getMessage()]);
+            return back()->with('error', 'The lease could not be uploaded.');
+        }
+    }
+
+    public function downloadLease(Request $request, Property $property, Unit $unit, Tenancy $tenancy, \App\Models\Lease $lease): StreamedResponse
+    {
+        $this->authorizeTenancyAccess($request->user(), $property, $unit, $tenancy);
+        $this->ensureLeaseBelongsToTenancy($lease, $tenancy);
+        if (!Storage::disk('local')->exists($lease->path)) {
+            Log::warning('Lease download requested for missing file.', ['lease_id' => $lease->id]);
+            abort(404);
+        }
+        return Storage::disk('local')->download($lease->path, $lease->original_name);
+    }
+
+    public function deleteLease(Request $request, Property $property, Unit $unit, Tenancy $tenancy, \App\Models\Lease $lease): RedirectResponse
+    {
+        $this->authorizeTenancyAccess($request->user(), $property, $unit, $tenancy);
+        $this->ensureLeaseBelongsToTenancy($lease, $tenancy);
+        Storage::disk('local')->delete($lease->path);
+        $lease->delete();
+        return back()->with('success', 'Lease deleted successfully.');
+    }
+
+    private function authorizeTenancyAccess($user, Property $property, Unit $unit, Tenancy $tenancy): void
+    {
+        if (!$user->isAdmin() && $property->owner_id !== $user->id) {
+            Log::warning('Unauthorized lease access attempt.', [
+                'user_id' => $user->id,
+                'property_id' => $property->id,
+                'tenancy_id' => $tenancy->id,
+            ]);
+            abort(403, 'You do not have permission to access this property.');
+        }
+        if ($unit->property_id !== $property->id || $tenancy->unit_id !== $unit->id) {
+            abort(404);
+        }
+    }
+
+    private function ensureLeaseBelongsToTenancy(\App\Models\Lease $lease, Tenancy $tenancy): void
+    {
+        if ($lease->tenancy_id !== $tenancy->id) {
+            abort(404);
+        }
     }
 
     private function authorizePropertyAccess($user, Property $property): void
