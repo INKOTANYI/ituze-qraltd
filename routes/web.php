@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileCompletionController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\TenancyController;
+use App\Http\Controllers\TenantController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,8 +22,41 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
+    $user = $request->user();
+    $properties = \App\Models\Property::query()
+        ->when(!$user->isAdmin(), fn ($query) => $query->where('owner_id', $user->id))
+        ->withCount([
+            'units',
+            'units as occupied_units_count' => fn ($query) => $query->where('status', 'occupied'),
+            'units as vacant_units_count' => fn ($query) => $query->where('status', 'vacant'),
+            'units as maintenance_units_count' => fn ($query) => $query->where('status', 'maintenance'),
+        ])
+        ->latest()
+        ->get();
+
+    $recentTenancies = \App\Models\Tenancy::with(['tenant', 'unit.property'])
+        ->where('status', 'active')
+        ->when(!$user->isAdmin(), fn ($query) => $query->whereHas('unit.property', fn ($property) => $property->where('owner_id', $user->id)))
+        ->latest('start_date')
+        ->take(5)
+        ->get();
+
+    $totalUnits = $properties->sum('units_count');
+    $occupiedUnits = $properties->sum('occupied_units_count');
+
+    return Inertia::render('Dashboard', [
+        'summary' => [
+            'properties' => $properties->count(),
+            'units' => $totalUnits,
+            'occupiedUnits' => $occupiedUnits,
+            'vacantUnits' => $properties->sum('vacant_units_count'),
+            'maintenanceUnits' => $properties->sum('maintenance_units_count'),
+            'occupancyRate' => $totalUnits ? round(($occupiedUnits / $totalUnits) * 100) : 0,
+        ],
+        'recentProperties' => $properties->take(4)->values(),
+        'recentTenancies' => $recentTenancies,
+    ]);
 })->middleware(['auth', 'verified', 'profile.complete'])->name('dashboard');
 
 Route::middleware(['auth', 'profile.complete'])->group(function () {
@@ -73,8 +107,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/{unit}/tenancy/{tenancy}/leases/{lease}', [TenancyController::class, 'downloadLease'])->name('tenancy.leases.download');
             Route::delete('/{unit}/tenancy/{tenancy}/leases/{lease}', [TenancyController::class, 'deleteLease'])->name('tenancy.leases.destroy');
         });
+
         Route::post('/{property}/tenants', [TenancyController::class, 'storeTenant'])->name('tenants.store');
     });
+
+    Route::middleware(['verified', 'profile.complete'])->get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
 
     Route::post('/api/ai/generate-property-description', [\App\Http\Controllers\AIDescriptionController::class, 'generatePropertyDescription'])->name('api.ai.generate-property-description');
 });

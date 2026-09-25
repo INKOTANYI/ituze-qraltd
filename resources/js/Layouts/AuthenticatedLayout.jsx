@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react';
 import {
     LayoutDashboard,
     Building2,
-    DoorOpen,
     Users as UsersIcon,
     FileText,
     CreditCard,
@@ -24,8 +23,7 @@ import {
 const ownerNavigation = [
     { name: 'Dashboard', href: 'dashboard', icon: LayoutDashboard, ready: true },
     { name: 'Properties', href: 'properties.index', icon: Building2, ready: true },
-    { name: 'Units', href: 'dashboard', icon: DoorOpen, ready: false },
-    { name: 'Tenants', href: 'dashboard', icon: UsersIcon, ready: false },
+    { name: 'Tenants', href: 'tenants.index', icon: UsersIcon, ready: true },
     { name: 'Leases', href: 'dashboard', icon: FileText, ready: false },
     { name: 'Payments', href: 'dashboard', icon: CreditCard, ready: false },
     { name: 'Maintenance', href: 'dashboard', icon: Wrench, ready: false },
@@ -38,7 +36,7 @@ const adminNavigation = [
     { name: 'Approvals', href: 'admin.approvals', icon: ShieldCheck, ready: true },
     { name: 'All Users', href: 'admin.users', icon: UsersIcon, ready: true },
     { name: 'Properties', href: 'properties.index', icon: Building2, ready: true },
-    { name: 'Units', href: 'dashboard', icon: DoorOpen, ready: false },
+    { name: 'Tenants', href: 'tenants.index', icon: UsersIcon, ready: true },
     { name: 'Leases', href: 'dashboard', icon: FileText, ready: false },
     { name: 'Payments', href: 'dashboard', icon: CreditCard, ready: false },
     { name: 'Maintenance', href: 'dashboard', icon: Wrench, ready: false },
