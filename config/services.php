@@ -40,4 +40,10 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
     ],
 
+    'whatsapp' => [
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'graph_version' => env('WHATSAPP_GRAPH_VERSION', 'v22.0'),
+    ],
+
 ];

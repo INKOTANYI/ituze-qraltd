@@ -9,18 +9,37 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\TenancyController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\PublicPropertyController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    $properties = \App\Models\Property::query()
+        ->whereHas('units', fn ($query) => $query->where('status', 'available'))
+        ->with([
+            'images:id,property_id,image_path,is_cover',
+            'cell.sector.district.province',
+            'units' => fn ($query) => $query
+                ->where('status', 'available')
+                ->with('unitType:id,name')
+                ->latest(),
+        ])
+        ->latest()
+        ->take(12)
+        ->get();
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
+        'properties' => $properties,
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+Route::get('/spaces/{property}', [PublicPropertyController::class, 'show'])->name('public.properties.show');
+Route::post('/spaces/{property}/inquiries', [PublicPropertyController::class, 'inquire'])->name('public.properties.inquiries.store');
 
 Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
     $user = $request->user();
@@ -42,6 +61,12 @@ Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
         ->take(5)
         ->get();
 
+    $recentInquiries = \App\Models\PropertyInquiry::with(['property', 'unit'])
+        ->when(!$user->isAdmin(), fn ($query) => $query->where('owner_id', $user->id))
+        ->latest()
+        ->take(6)
+        ->get();
+
     $totalUnits = $properties->sum('units_count');
     $occupiedUnits = $properties->sum('occupied_units_count');
 
@@ -56,6 +81,7 @@ Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
         ],
         'recentProperties' => $properties->take(4)->values(),
         'recentTenancies' => $recentTenancies,
+        'recentInquiries' => $recentInquiries,
     ]);
 })->middleware(['auth', 'verified', 'profile.complete'])->name('dashboard');
 

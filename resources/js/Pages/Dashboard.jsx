@@ -3,7 +3,7 @@ import CompleteProfileModal from '@/Components/CompleteProfileModal';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
     Activity, ArrowUpRight, Building2, CalendarX, CheckCircle2,
-    DoorOpen, Home, Plus, Settings2, Users,
+    DoorOpen, Home, MessageSquare, Plus, Settings2, Users,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -14,7 +14,7 @@ const cards = [
     { key: 'availableUnits', label: 'Available units', icon: Home, color: 'bg-amber-50 text-amber-700' },
 ];
 
-export default function Dashboard({ summary, recentProperties = [], recentTenancies = [] }) {
+export default function Dashboard({ summary, recentProperties = [], recentTenancies = [], recentInquiries = [] }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const [modalDismissed, setModalDismissed] = useState(false);
@@ -54,6 +54,7 @@ export default function Dashboard({ summary, recentProperties = [], recentTenanc
             </div>
 
             <div className="mt-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"><div className="mb-4 flex items-center justify-between"><h2 className="font-[Sora] font-semibold text-gray-900">Recent occupancy</h2><Link href={route('tenants.index')} className="text-sm font-medium text-[#0E3B2E] hover:underline">View tenants</Link></div>{recentTenancies.length ? <div className="divide-y divide-gray-100">{recentTenancies.map(tenancy => <div key={tenancy.id} className="flex flex-col gap-2 py-3 first:pt-0 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50"><CheckCircle2 size={17} className="text-emerald-600" /></div><div><p className="text-sm font-semibold text-gray-800">{tenancy.tenant?.name}</p><p className="text-xs text-gray-500">{tenancy.unit?.property?.name} · Unit {tenancy.unit?.unit_number}</p></div></div><p className="text-xs text-gray-500">Started {new Date(tenancy.start_date).toLocaleDateString()}</p></div>)}</div> : <p className="py-4 text-sm text-gray-500">No active tenants yet. Assign tenants from a property’s units.</p>}</div>
+            <div className="mt-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"><div className="mb-4 flex items-center justify-between"><h2 className="font-[Sora] font-semibold text-gray-900">Visitor inquiries</h2><MessageSquare size={18} className="text-[#D9A441]" /></div>{recentInquiries.length ? <div className="divide-y divide-gray-100">{recentInquiries.map((inquiry) => <div key={inquiry.id} className="py-3 first:pt-0"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-gray-800">{inquiry.visitor_name}</p><p className="text-xs text-gray-500">{inquiry.property?.name} · Unit {inquiry.unit?.unit_number}</p></div><span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase text-amber-700">{inquiry.status}</span></div><p className="mt-2 line-clamp-2 text-sm text-gray-600">{inquiry.message}</p><p className="mt-2 text-xs text-gray-400">{inquiry.visitor_phone}</p></div>)}</div> : <p className="py-4 text-sm text-gray-500">No visitor inquiries yet.</p>}</div>
         </AuthenticatedLayout>
     );
 }

@@ -28,7 +28,7 @@ const ownerNavigation = [
     { name: 'Leases', href: 'dashboard', icon: FileText, ready: false },
     { name: 'Payments', href: 'dashboard', icon: CreditCard, ready: false },
     { name: 'Maintenance', href: 'dashboard', icon: Wrench, ready: false },
-    { name: 'Messages', href: 'dashboard', icon: MessageSquare, ready: false },
+    { name: 'Messages', href: 'dashboard', icon: MessageSquare, ready: true },
     { name: 'Reports', href: 'dashboard', icon: BarChart3, ready: false },
 ];
 
@@ -41,7 +41,7 @@ const adminNavigation = [
     { name: 'Leases', href: 'dashboard', icon: FileText, ready: false },
     { name: 'Payments', href: 'dashboard', icon: CreditCard, ready: false },
     { name: 'Maintenance', href: 'dashboard', icon: Wrench, ready: false },
-    { name: 'Messages', href: 'dashboard', icon: MessageSquare, ready: false },
+    { name: 'Messages', href: 'dashboard', icon: MessageSquare, ready: true },
     { name: 'Reports', href: 'dashboard', icon: BarChart3, ready: false },
 ];
 
