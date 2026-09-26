@@ -144,32 +144,15 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
 
                         <div className="mt-6 grid grid-cols-2 gap-3 rounded-xl bg-gray-50 p-4 md:grid-cols-7 md:gap-4">
                             <div className="text-center">
-                                <p className="text-xs text-gray-500">Total Units</p>
-                                {(property.total_units !== null && property.total_units !== undefined) || property.units_count ? (
-                                    <div>
-                                        <p className="text-2xl font-bold text-[#0E3B2E]">
-                                            {property.total_units ?? property.units_count ?? 0}
-                                        </p>
-                                        {(property.total_units !== null && property.total_units !== undefined) && property.units_count !== undefined && Number(property.total_units) !== Number(property.units_count) ? (
-                                            <p className="text-[10px] text-amber-600 mt-0.5">
-                                                Configured: {property.total_units} · Actual: {property.units_count}
-                                            </p>
-                                        ) : null}
-                                    </div>
-                                ) : (
-                                    <p className="text-2xl font-bold text-[#0E3B2E]">0</p>
-                                )}
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs text-gray-500">Size</p>
                                 <p className="text-2xl font-bold text-[#0E3B2E]">
-                                    {property.size_sqm !== null && property.size_sqm !== undefined ? `${Number(property.size_sqm).toLocaleString()} m²` : 'N/A'}
+                                    {property.units_count ?? 0}
                                 </p>
+                                <p className="text-xs text-gray-500">Created Units</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-xs text-gray-500">Rent / Month</p>
+                                <p className="text-xs text-gray-500">Vacant Units</p>
                                 <p className="text-2xl font-bold text-[#0E3B2E]">
-                                    {property.rent_amount !== null && property.rent_amount !== undefined ? Number(property.rent_amount).toLocaleString() : 'N/A'}
+                                    {property.units_vacant_count ?? 0}
                                 </p>
                             </div>
                             <div className="text-center">

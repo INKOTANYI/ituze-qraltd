@@ -17,23 +17,17 @@ class Property extends Model
         'address',
         'description',
         'status',
-        'total_units',
         'total_floors',
         'bedrooms',
         'bathrooms',
-        'size_sqm',
-        'rent_amount',
         'amenities',
         'proximity',
     ];
 
     protected $casts = [
-        'total_units' => 'integer',
         'total_floors' => 'integer',
         'bedrooms' => 'integer',
         'bathrooms' => 'integer',
-        'size_sqm' => 'decimal:2',
-        'rent_amount' => 'decimal:2',
         'amenities' => 'array',
         'proximity' => 'array',
     ];

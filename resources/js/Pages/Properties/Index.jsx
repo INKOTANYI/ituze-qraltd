@@ -201,9 +201,7 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                                 <div>
                                                     <span className="text-xs text-gray-400">
                                                         {(() => {
-                                                        const plannedUnits = property.total_units !== null && property.total_units !== undefined && property.total_units !== '' ? Number(property.total_units) : null;
-                                                        const actualUnits = property.units_count !== undefined ? Number(property.units_count) : null;
-                                                        const displayUnits = plannedUnits ?? actualUnits ?? 0;
+                                                        const displayUnits = property.units_count !== undefined ? Number(property.units_count) : 0;
                                                         const label = `${displayUnits} unit${displayUnits === 1 ? '' : 's'}`;
                                                         if (property.total_floors !== null && property.total_floors !== undefined && property.total_floors !== '') {
                                                             const fl = Number(property.total_floors);
@@ -212,11 +210,6 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                                         return label;
                                                     })()}
                                                     </span>
-                                                    {(property.total_units !== null && property.total_units !== undefined && property.units_count !== undefined && Number(property.total_units) !== Number(property.units_count)) && (
-                                                        <p className="text-[10px] text-amber-600 mt-0.5">
-                                                            ⚠ Configured: {property.total_units} · Actual: {property.units_count ?? 0}
-                                                        </p>
-                                                    )}
                                                 </div>
                                                 {property.units_monthly_rent_sum && Number(property.units_monthly_rent_sum) > 0 ? (
                                                     <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-[#0E3B2E]">
@@ -224,10 +217,6 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                                         {Number(property.units_monthly_rent_sum).toLocaleString()} RWF/mo
                                                     </span>
                                                 ) : null}
-                                            </div>
-                                            <div className="flex items-center justify-between text-xs text-gray-500">
-                                                {property.size_sqm !== null && property.size_sqm !== undefined && <span>{Number(property.size_sqm).toLocaleString()} m²</span>}
-                                                {property.rent_amount !== null && property.rent_amount !== undefined && <span>{Number(property.rent_amount).toLocaleString()} RWF/mo</span>}
                                             </div>
                                             <div className="flex items-center justify-end gap-2">
                                                 <Link

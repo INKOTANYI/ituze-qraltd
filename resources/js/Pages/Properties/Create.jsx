@@ -50,12 +50,9 @@ export default function PropertyCreate() {
         cell_id: '',
         property_type_id: '',
         status: 'active',
-        total_units: '',
         total_floors: '',
         bedrooms: '',
         bathrooms: '',
-        size_sqm: '',
-        rent_amount: '',
         amenities: Object.fromEntries(ALL_AMENITIES.map(a => [a.key, false])),
         proximity: Object.fromEntries(PROXIMITY.map(p => [p.key, false])),
         images: [],
@@ -162,7 +159,6 @@ export default function PropertyCreate() {
                 property_type_name: getPropertyTypeName(),
                 cell_id: data.cell_id || null,
                 ...locationNames,
-                total_units: data.total_units ? Number(data.total_units) : null,
                 total_floors: data.total_floors ? Number(data.total_floors) : null,
                 amenities: amenitiesPayload,
                 proximity: proximityPayload,
@@ -309,12 +305,9 @@ export default function PropertyCreate() {
         formData.append('cell_id', data.cell_id);
         formData.append('property_type_id', data.property_type_id);
         formData.append('status', data.status);
-        if (data.total_units !== '') formData.append('total_units', data.total_units);
         if (data.total_floors !== '') formData.append('total_floors', data.total_floors);
         if (isApartment && data.bedrooms !== '') formData.append('bedrooms', data.bedrooms);
         if (isApartment && data.bathrooms !== '') formData.append('bathrooms', data.bathrooms);
-        if (data.size_sqm !== '') formData.append('size_sqm', data.size_sqm);
-        if (data.rent_amount !== '') formData.append('rent_amount', data.rent_amount);
 
         getAmenitiesForType(data.property_type_id, propertyTypes).forEach(a => {
             formData.append(`amenities[${a.key}]`, data.amenities[a.key] ? '1' : '0');
@@ -426,48 +419,6 @@ export default function PropertyCreate() {
                                     {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Total Units</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={data.total_units}
-                                            onChange={(e) => setData('total_units', e.target.value)}
-                                            className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                            placeholder="e.g., 24"
-                                        />
-                                        {errors.total_units && <p className="mt-1 text-sm text-red-500">{errors.total_units}</p>}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700">Property Size (m²)</label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={data.size_sqm}
-                                                onChange={(e) => setData('size_sqm', e.target.value)}
-                                                className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                                placeholder="e.g., 200"
-                                            />
-                                            {errors.size_sqm && <p className="mt-1 text-sm text-red-500">{errors.size_sqm}</p>}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700">Rent Amount (RWF / month)</label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={data.rent_amount}
-                                                onChange={(e) => setData('rent_amount', e.target.value)}
-                                                className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                                placeholder="e.g., 500000"
-                                            />
-                                            {errors.rent_amount && <p className="mt-1 text-sm text-red-500">{errors.rent_amount}</p>}
-                                        </div>
-                                    </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">
                                             Total Floors
@@ -483,7 +434,6 @@ export default function PropertyCreate() {
                                         />
                                         {errors.total_floors && <p className="mt-1 text-sm text-red-500">{errors.total_floors}</p>}
                                     </div>
-                                </div>
 
                                 {isApartment && (
                                     <div className="rounded-2xl border border-[#0E3B2E]/10 bg-[#0E3B2E]/[0.03] p-4">
