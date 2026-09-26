@@ -29,7 +29,7 @@ Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
         ->withCount([
             'units',
             'units as occupied_units_count' => fn ($query) => $query->where('status', 'occupied'),
-            'units as vacant_units_count' => fn ($query) => $query->where('status', 'vacant'),
+            'units as available_units_count' => fn ($query) => $query->where('status', 'available'),
             'units as maintenance_units_count' => fn ($query) => $query->where('status', 'maintenance'),
         ])
         ->latest()
@@ -50,7 +50,7 @@ Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
             'properties' => $properties->count(),
             'units' => $totalUnits,
             'occupiedUnits' => $occupiedUnits,
-            'vacantUnits' => $properties->sum('vacant_units_count'),
+            'availableUnits' => $properties->sum('available_units_count'),
             'maintenanceUnits' => $properties->sum('maintenance_units_count'),
             'occupancyRate' => $totalUnits ? round(($occupiedUnits / $totalUnits) * 100) : 0,
         ],

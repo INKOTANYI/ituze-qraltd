@@ -39,8 +39,6 @@ export default function PropertyCreate() {
         address: '',
         description: '',
         cell_id: '',
-        bedrooms: '',
-        bathrooms: '',
         amenities: Object.fromEntries(ALL_AMENITIES.map(a => [a.key, false])),
         proximity: Object.fromEntries(PROXIMITY.map(p => [p.key, false])),
         images: [],
@@ -273,8 +271,6 @@ export default function PropertyCreate() {
         formData.append('address', data.address);
         formData.append('description', data.description);
         formData.append('cell_id', data.cell_id);
-        if (data.bedrooms !== '') formData.append('bedrooms', data.bedrooms);
-        if (data.bathrooms !== '') formData.append('bathrooms', data.bathrooms);
 
         ALL_AMENITIES.forEach(a => {
             formData.append(`amenities[${a.key}]`, data.amenities[a.key] ? '1' : '0');
@@ -295,8 +291,6 @@ export default function PropertyCreate() {
             },
         });
     };
-
-    const isApartment = true;
 
     return (
         <AuthenticatedLayout header="Add New Property">
@@ -368,51 +362,6 @@ export default function PropertyCreate() {
                                         placeholder="e.g., KG 123 St, Kigali"
                                     />
                                     {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
-                                </div>
-
-                                {isApartment && (
-                                    <div className="rounded-2xl border border-[#0E3B2E]/10 bg-[#0E3B2E]/[0.03] p-4">
-                                        <p className="text-sm font-semibold text-[#0E3B2E]">Apartment details</p>
-                                        <p className="mt-1 text-xs text-gray-500">Add the room details renters use to compare apartments.</p>
-                                        <div className="mt-3 grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Number of Bedrooms</label>
-                                                <input type="number" min="0" value={data.bedrooms} onChange={(e) => setData('bedrooms', e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-[#0E3B2E] focus:ring-2 focus:ring-[#0E3B2E]/15" placeholder="e.g., 3" />
-                                                {errors.bedrooms && <p className="mt-1 text-sm text-red-500">{errors.bedrooms}</p>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Number of Bathrooms</label>
-                                                <input type="number" min="0" value={data.bathrooms} onChange={(e) => setData('bathrooms', e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-[#0E3B2E] focus:ring-2 focus:ring-[#0E3B2E]/15" placeholder="e.g., 2" />
-                                                {errors.bathrooms && <p className="mt-1 text-sm text-red-500">{errors.bathrooms}</p>}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <label className="block text-sm font-medium text-gray-700">Description</label>
-                                        <button
-                                            type="button"
-                                            onClick={handleGenerateDescription}
-                                            disabled={generatingDescription}
-                                            className="inline-flex items-center gap-1.5 rounded-xl border border-[#0E3B2E]/30 bg-[#0E3B2E]/5 px-3 py-1.5 text-xs font-medium text-[#0E3B2E] transition-all hover:bg-[#0E3B2E]/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {generatingDescription ? (
-                                                <><Loader2 size={13} className="animate-spin" /> Generating...</>
-                                            ) : (
-                                                <><Sparkles size={13} /> Generate Description with AI</>
-                                            )}
-                                        </button>
-                                    </div>
-                                    <textarea
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                        rows={6}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                        placeholder="Describe your property... or click Generate above for an AI-crafted description!"
-                                    />
-                                    {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                                 </div>
 
                                 <div>
@@ -535,6 +484,28 @@ export default function PropertyCreate() {
                                     </label>
                                 ))}
                             </div>
+                        </div>
+
+                        <div className="border-t border-gray-100 p-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-semibold text-gray-900">Description</h3>
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateDescription}
+                                    disabled={generatingDescription}
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#0E3B2E]/30 bg-[#0E3B2E]/5 px-3 py-1.5 text-xs font-medium text-[#0E3B2E] transition-all hover:bg-[#0E3B2E]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {generatingDescription ? <><Loader2 size={13} className="animate-spin" /> Generating...</> : <><Sparkles size={13} /> Generate Description with AI</>}
+                                </button>
+                            </div>
+                            <textarea
+                                value={data.description}
+                                onChange={(e) => setData('description', e.target.value)}
+                                rows={6}
+                                className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
+                                placeholder="Describe your property... or click Generate above for an AI-crafted description!"
+                            />
+                            {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                         </div>
 
                         <div className="border-t border-gray-100 p-6">

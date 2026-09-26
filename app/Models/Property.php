@@ -15,15 +15,11 @@ class Property extends Model
         'name',
         'address',
         'description',
-        'bedrooms',
-        'bathrooms',
         'amenities',
         'proximity',
     ];
 
     protected $casts = [
-        'bedrooms' => 'integer',
-        'bathrooms' => 'integer',
         'amenities' => 'array',
         'proximity' => 'array',
     ];

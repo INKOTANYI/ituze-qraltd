@@ -18,6 +18,7 @@ import {
     X,
     Bell,
     ChevronDown,
+    CheckCircle,
 } from 'lucide-react';
 
 const ownerNavigation = [
@@ -57,6 +58,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [activeLang, setActiveLang] = useState('EN');
     const [toasts, setToasts] = useState([]);
+    const [successModal, setSuccessModal] = useState(null);
 
     const navigation = user.role === 'admin' ? adminNavigation : ownerNavigation;
 
@@ -71,6 +73,7 @@ export default function AuthenticatedLayout({ header, children }) {
             }
         });
         if (newToasts.length) setToasts(prev => [...prev, ...newToasts]);
+        if (flash.success) setSuccessModal(flash.success);
     }, [flash]);
 
     const dismissToast = (id) => {
@@ -89,6 +92,24 @@ export default function AuthenticatedLayout({ header, children }) {
                             onClose={() => dismissToast(t.id)}
                         />
                     ))}
+                </div>
+            )}
+            {successModal && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl ring-1 ring-white/30">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+                            <CheckCircle size={34} className="text-emerald-600" />
+                        </div>
+                        <h2 className="mt-5 text-xl font-bold text-gray-900">Success</h2>
+                        <p className="mt-2 text-sm leading-6 text-gray-600">{successModal}</p>
+                        <button
+                            type="button"
+                            onClick={() => setSuccessModal(null)}
+                            className="mt-6 inline-flex min-w-32 items-center justify-center rounded-xl bg-[#0E3B2E] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0a2e23]"
+                        >
+                            Continue
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -252,11 +273,6 @@ export default function AuthenticatedLayout({ header, children }) {
                         {flash.warning && (
                             <div className="mb-4 max-w-7xl mx-auto">
                                 <InlineAlert message={flash.warning} type="warning" />
-                            </div>
-                        )}
-                        {flash.success && (
-                            <div className="mb-4 max-w-7xl mx-auto">
-                                <InlineAlert message={flash.success} type="success" />
                             </div>
                         )}
                         {flash.info && (
