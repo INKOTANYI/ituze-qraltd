@@ -18,8 +18,6 @@ const ALL_AMENITIES = [
     { key: 'cleaning_service', label: 'Cleaners' },
 ];
 
-const BASIC_AMENITY_KEYS = ['parking', 'security', 'generator', 'water_tank', 'elevator', 'cleaning_service'];
-
 const PROXIMITY = [
     { key: 'near_tarmac', label: 'Near Tarmac Road' },
     { key: 'near_school', label: 'Near School' },
@@ -27,14 +25,6 @@ const PROXIMITY = [
     { key: 'near_market', label: 'Near Market' },
     { key: 'near_public_transport', label: 'Near Public Transport' },
 ];
-
-const getAmenitiesForType = (propertyTypeId, propertyTypes, fallbackTypeName) => {
-    const selected = propertyTypes.find(p => String(p.id) === String(propertyTypeId));
-    const typeName = selected?.name || fallbackTypeName || '';
-    const isApartment = typeName.toLowerCase() === 'apartment';
-    if (isApartment) return ALL_AMENITIES;
-    return ALL_AMENITIES.filter(a => BASIC_AMENITY_KEYS.includes(a.key));
-};
 
 const getCsrfToken = () => {
     const meta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -80,7 +70,6 @@ export default function PropertyEdit({ property, canEdit }) {
         address: property.address || '',
         description: property.description || '',
         cell_id: property.cell_id || '',
-        property_type_id: property.property_type_id || '',
         bedrooms: property.bedrooms !== null && property.bedrooms !== undefined ? String(property.bedrooms) : '',
         bathrooms: property.bathrooms !== null && property.bathrooms !== undefined ? String(property.bathrooms) : '',
         amenities: buildInitialBooleans(property.amenities, ALL_AMENITIES.map(a => a.key), false),
@@ -93,7 +82,6 @@ export default function PropertyEdit({ property, canEdit }) {
     const [districts, setDistricts] = useState([]);
     const [sectors, setSectors] = useState([]);
     const [cells, setCells] = useState([]);
-    const [propertyTypes, setPropertyTypes] = useState([]);
     const [selectedProvince, setSelectedProvince] = useState('');
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [selectedSector, setSelectedSector] = useState('');
@@ -109,9 +97,6 @@ export default function PropertyEdit({ property, canEdit }) {
             .then(res => res.json())
             .then(data => setProvinces(data));
 
-        fetch('/api/property-types')
-            .then(res => res.json())
-            .then(data => setPropertyTypes(data));
 
         if (property.cell) {
             setSelectedProvince(property.cell.sector?.district?.province_id || '');
@@ -165,8 +150,6 @@ export default function PropertyEdit({ property, canEdit }) {
     };
 
     const getPropertyTypeName = () => {
-        const pt = propertyTypes.find(p => String(p.id) === String(data.property_type_id));
-        return pt?.name || property.property_type?.name || '';
     };
 
     const handleGenerateDescription = async () => {
@@ -183,8 +166,6 @@ export default function PropertyEdit({ property, canEdit }) {
             const body = {
                 name: data.name,
                 address: data.address,
-                property_type_id: data.property_type_id || null,
-                property_type_name: getPropertyTypeName(),
                 cell_id: data.cell_id || null,
                 ...locationNames,
                 amenities: data.amenities,
@@ -299,17 +280,14 @@ export default function PropertyEdit({ property, canEdit }) {
         formData.append('address', data.address);
         formData.append('description', data.description || '');
         formData.append('cell_id', data.cell_id);
-        if (data.property_type_id) {
-            formData.append('property_type_id', data.property_type_id);
-        }
-        if (isApartment && data.bedrooms !== '' && data.bedrooms !== null && data.bedrooms !== undefined) {
+        if (data.bedrooms !== '' && data.bedrooms !== null && data.bedrooms !== undefined) {
             formData.append('bedrooms', data.bedrooms);
         }
-        if (isApartment && data.bathrooms !== '' && data.bathrooms !== null && data.bathrooms !== undefined) {
+        if (data.bathrooms !== '' && data.bathrooms !== null && data.bathrooms !== undefined) {
             formData.append('bathrooms', data.bathrooms);
         }
 
-        getAmenitiesForType(data.property_type_id, propertyTypes, property.property_type?.name).forEach(a => {
+        ALL_AMENITIES.forEach(a => {
             formData.append(`amenities[${a.key}]`, data.amenities[a.key] ? '1' : '0');
         });
         PROXIMITY.forEach(p => {
@@ -337,14 +315,15 @@ export default function PropertyEdit({ property, canEdit }) {
         });
     };
 
-    const isApartment = (propertyTypes.find(p => String(p.id) === String(data.property_type_id))?.name
-        || property.property_type?.name || '').toLowerCase() === 'apartment';
+    const isApartment = true;
 
     return (
         <AuthenticatedLayout header="Edit Property">
             <Head title="Edit Property" />
 
-            <div className="mb-6">
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 p-4 backdrop-blur-sm sm:p-8">
+                <div className="mx-auto min-h-full max-w-4xl rounded-3xl bg-white/95 p-4 shadow-2xl ring-1 ring-white/30 sm:p-7">
+            <div className="mb-6 flex items-center justify-between">
                 <Link
                     href={route('properties.show', property)}
                     className="inline-flex items-center gap-1.5 text-sm text-gray-600 transition-colors hover:text-[#0E3B2E]"
@@ -396,21 +375,6 @@ export default function PropertyEdit({ property, canEdit }) {
                                         placeholder="e.g., Kigali Heights Apartments"
                                     />
                                     {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Property Type *</label>
-                                    <select
-                                        value={data.property_type_id}
-                                        onChange={(e) => setData('property_type_id', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                    >
-                                        <option value="">Select Property Type</option>
-                                        {propertyTypes.map(type => (
-                                            <option key={type.id} value={type.id}>{type.name}</option>
-                                        ))}
-                                    </select>
-                                    {errors.property_type_id && <p className="mt-1 text-sm text-red-500">{errors.property_type_id}</p>}
                                 </div>
 
                                 <div>
@@ -546,16 +510,10 @@ export default function PropertyEdit({ property, canEdit }) {
                         <div className="border-t border-gray-100 p-6">
                             <h3 className="text-lg font-semibold text-gray-900">Amenities</h3>
                             <p className="mt-1 text-sm text-gray-500">
-                                {(() => {
-                                    const pt = propertyTypes.find(p => String(p.id) === String(data.property_type_id));
-                                    const typeName = pt?.name || property.property_type?.name || '';
-                                    return typeName === 'Apartment'
-                                        ? 'All amenities available — select any that apply to this Apartment'
-                                        : 'Select any amenities that apply';
-                                })()}
+                                Select any amenities that apply to this property
                             </p>
                             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                {getAmenitiesForType(data.property_type_id, propertyTypes, property.property_type?.name).map(a => (
+                                {ALL_AMENITIES.map(a => (
                                     <label
                                         key={a.key}
                                         className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 cursor-pointer transition-all ${
@@ -708,6 +666,8 @@ export default function PropertyEdit({ property, canEdit }) {
                         </button>
                     </div>
                 </form>
+            </div>
+                </div>
             </div>
         </AuthenticatedLayout>
     );

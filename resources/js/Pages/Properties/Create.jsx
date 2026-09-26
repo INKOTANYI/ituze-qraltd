@@ -18,8 +18,6 @@ const ALL_AMENITIES = [
     { key: 'cleaning_service', label: 'Cleaners' },
 ];
 
-const BASIC_AMENITY_KEYS = ['parking', 'security', 'generator', 'water_tank', 'elevator', 'cleaning_service'];
-
 const PROXIMITY = [
     { key: 'near_tarmac', label: 'Near Tarmac Road' },
     { key: 'near_school', label: 'Near School' },
@@ -27,13 +25,6 @@ const PROXIMITY = [
     { key: 'near_market', label: 'Near Market' },
     { key: 'near_public_transport', label: 'Near Public Transport' },
 ];
-
-const getAmenitiesForType = (propertyTypeId, propertyTypes) => {
-    const selected = propertyTypes.find(p => String(p.id) === String(propertyTypeId));
-    const isApartment = (selected?.name || '').toLowerCase() === 'apartment';
-    if (isApartment) return ALL_AMENITIES;
-    return ALL_AMENITIES.filter(a => BASIC_AMENITY_KEYS.includes(a.key));
-};
 
 const getCsrfToken = () => {
     const meta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -48,7 +39,6 @@ export default function PropertyCreate() {
         address: '',
         description: '',
         cell_id: '',
-        property_type_id: '',
         bedrooms: '',
         bathrooms: '',
         amenities: Object.fromEntries(ALL_AMENITIES.map(a => [a.key, false])),
@@ -60,7 +50,6 @@ export default function PropertyCreate() {
     const [districts, setDistricts] = useState([]);
     const [sectors, setSectors] = useState([]);
     const [cells, setCells] = useState([]);
-    const [propertyTypes, setPropertyTypes] = useState([]);
     const [selectedProvince, setSelectedProvince] = useState('');
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [selectedSector, setSelectedSector] = useState('');
@@ -77,9 +66,6 @@ export default function PropertyCreate() {
             .then(res => res.json())
             .then(data => setProvinces(data));
 
-        fetch('/api/property-types')
-            .then(res => res.json())
-            .then(data => setPropertyTypes(data));
     }, []);
 
     useEffect(() => {
@@ -131,11 +117,6 @@ export default function PropertyCreate() {
         };
     };
 
-    const getPropertyTypeName = () => {
-        const pt = propertyTypes.find(p => String(p.id) === String(data.property_type_id));
-        return pt?.name || '';
-    };
-
     const handleGenerateDescription = async () => {
         if (!data.name || !String(data.name).trim()) {
             setBannerMsg('⚠️ Please enter a property name first, then click Generate — this helps the AI craft personalised copy.');
@@ -153,8 +134,6 @@ export default function PropertyCreate() {
             const body = {
                 name: data.name,
                 address: data.address,
-                property_type_id: data.property_type_id || null,
-                property_type_name: getPropertyTypeName(),
                 cell_id: data.cell_id || null,
                 ...locationNames,
                 amenities: amenitiesPayload,
@@ -294,11 +273,10 @@ export default function PropertyCreate() {
         formData.append('address', data.address);
         formData.append('description', data.description);
         formData.append('cell_id', data.cell_id);
-        formData.append('property_type_id', data.property_type_id);
-        if (isApartment && data.bedrooms !== '') formData.append('bedrooms', data.bedrooms);
-        if (isApartment && data.bathrooms !== '') formData.append('bathrooms', data.bathrooms);
+        if (data.bedrooms !== '') formData.append('bedrooms', data.bedrooms);
+        if (data.bathrooms !== '') formData.append('bathrooms', data.bathrooms);
 
-        getAmenitiesForType(data.property_type_id, propertyTypes).forEach(a => {
+        ALL_AMENITIES.forEach(a => {
             formData.append(`amenities[${a.key}]`, data.amenities[a.key] ? '1' : '0');
         });
         PROXIMITY.forEach(p => {
@@ -318,16 +296,15 @@ export default function PropertyCreate() {
         });
     };
 
-    const isApartment = propertyTypes.some(type =>
-        String(type.id) === String(data.property_type_id) &&
-        String(type.name).toLowerCase() === 'apartment'
-    );
+    const isApartment = true;
 
     return (
         <AuthenticatedLayout header="Add New Property">
             <Head title="Add Property" />
 
-            <div className="mb-6">
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 p-4 backdrop-blur-sm sm:p-8">
+                <div className="mx-auto min-h-full max-w-4xl rounded-3xl bg-white/95 p-4 shadow-2xl ring-1 ring-white/30 sm:p-7">
+            <div className="mb-6 flex items-center justify-between">
                 <Link
                     href={route('properties.index')}
                     className="inline-flex items-center gap-1.5 text-sm text-gray-600 transition-colors hover:text-[#0E3B2E]"
@@ -379,21 +356,6 @@ export default function PropertyCreate() {
                                         placeholder="e.g., Kigali Heights Apartments"
                                     />
                                     {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Property Type *</label>
-                                    <select
-                                        value={data.property_type_id}
-                                        onChange={(e) => setData('property_type_id', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                    >
-                                        <option value="">Select Property Type</option>
-                                        {propertyTypes.map(type => (
-                                            <option key={type.id} value={type.id}>{type.name}</option>
-                                        ))}
-                                    </select>
-                                    {errors.property_type_id && <p className="mt-1 text-sm text-red-500">{errors.property_type_id}</p>}
                                 </div>
 
                                 <div>
@@ -526,15 +488,10 @@ export default function PropertyCreate() {
                         <div className="border-t border-gray-100 p-6">
                             <h3 className="text-lg font-semibold text-gray-900">Amenities</h3>
                             <p className="mt-1 text-sm text-gray-500">
-                                {(() => {
-                                    const pt = propertyTypes.find(p => String(p.id) === String(data.property_type_id));
-                                    return pt?.name === 'Apartment'
-                                        ? 'All amenities available — select any that apply to this Apartment'
-                                        : 'Select any amenities that apply to this property';
-                                })()}
+                                Select any amenities that apply to this property
                             </p>
                             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                {getAmenitiesForType(data.property_type_id, propertyTypes).map(a => (
+                                {ALL_AMENITIES.map(a => (
                                     <label
                                         key={a.key}
                                         className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 cursor-pointer transition-all ${
@@ -640,6 +597,8 @@ export default function PropertyCreate() {
                         </button>
                     </div>
                 </form>
+            </div>
+                </div>
             </div>
         </AuthenticatedLayout>
     );

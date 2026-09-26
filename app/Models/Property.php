@@ -12,7 +12,6 @@ class Property extends Model
     protected $fillable = [
         'owner_id',
         'cell_id',
-        'property_type_id',
         'name',
         'address',
         'description',
@@ -37,11 +36,6 @@ class Property extends Model
     public function cell()
     {
         return $this->belongsTo(Cell::class);
-    }
-
-    public function propertyType()
-    {
-        return $this->belongsTo(PropertyType::class);
     }
 
     public function images()

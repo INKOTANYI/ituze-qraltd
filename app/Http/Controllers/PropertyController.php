@@ -22,7 +22,7 @@ class PropertyController extends Controller
     {
         $user = $request->user();
         
-        $query = Property::with(['owner', 'cell.sector.district.province', 'propertyType', 'images'])
+        $query = Property::with(['owner', 'cell.sector.district.province', 'images'])
             ->withCount([
                 'units',
                 'units as units_vacant_count' => function ($q) { $q->where('status', 'vacant'); },
@@ -77,7 +77,6 @@ class PropertyController extends Controller
                     'address' => 'required|string|max:255',
                     'description' => 'nullable|string',
                     'cell_id' => 'required|exists:cells,id',
-                    'property_type_id' => 'nullable|exists:property_types,id',
                     'bedrooms' => 'nullable|integer|min:0',
                     'bathrooms' => 'nullable|integer|min:0',
                     'amenities' => 'nullable|array',
@@ -101,7 +100,6 @@ class PropertyController extends Controller
             $property = Property::create([
                 'owner_id' => $request->user()->id,
                 'cell_id' => $request->cell_id,
-                'property_type_id' => $request->property_type_id,
                 'name' => $request->name,
                 'address' => $request->address,
                 'description' => $request->description,
@@ -146,7 +144,7 @@ class PropertyController extends Controller
     {
         $this->authorizePropertyAccess($request->user(), $property);
 
-        $property->load(['owner', 'cell.sector.district.province', 'propertyType', 'images', 'units.unitType']);
+        $property->load(['owner', 'cell.sector.district.province', 'images', 'units.unitType']);
         $property->loadCount([
             'units as units_vacant_count' => function ($q) { $q->where('status', 'vacant'); },
             'units as units_occupied_count' => function ($q) { $q->where('status', 'occupied'); },
@@ -168,7 +166,7 @@ class PropertyController extends Controller
     {
         $this->authorizePropertyAccess($request->user(), $property);
 
-        $property->load(['owner', 'cell.sector.district.province', 'propertyType', 'images']);
+        $property->load(['owner', 'cell.sector.district.province', 'images']);
 
         return Inertia::render('Properties/Edit', [
             'property' => $property,
@@ -190,7 +188,6 @@ class PropertyController extends Controller
                 'address' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'cell_id' => 'required|exists:cells,id',
-                'property_type_id' => 'nullable|exists:property_types,id',
                 'bedrooms' => 'nullable|integer|min:0',
                 'bathrooms' => 'nullable|integer|min:0',
                 'amenities' => 'nullable|array',
@@ -213,7 +210,6 @@ class PropertyController extends Controller
 
         $property->update([
             'cell_id' => $request->cell_id,
-            'property_type_id' => $request->property_type_id,
             'name' => $request->name,
             'address' => $request->address,
             'description' => $request->description,
@@ -277,17 +273,8 @@ class PropertyController extends Controller
         }
     }
 
-    /**
-     * Apartment-only attributes must never be stored on other property types.
-     */
     private function apartmentValue(Request $request, string $field)
     {
-        $type = $request->property_type_id
-            ? \App\Models\PropertyType::find($request->property_type_id)
-            : null;
-
-        return $type && strcasecmp($type->name, 'Apartment') === 0
-            ? $request->input($field)
-            : null;
+        return $request->input($field);
     }
 }

@@ -7,13 +7,6 @@ const statusStyles = {
     inactive: 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10',
 };
 
-const propertyTypeStyles = {
-    'Office': 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10',
-    'Apartment': 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10',
-    'Warehouse': 'bg-orange-50 text-orange-700 ring-1 ring-orange-600/10',
-    'Commercial': 'bg-teal-50 text-teal-700 ring-1 ring-teal-600/10',
-};
-
 export default function PropertyShow({ property, isAdmin, canEdit }) {
     const confirmDelete = () => {
         if (!canEdit) return;
@@ -83,11 +76,6 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                             <div>
                                 <div className="flex items-center gap-3">
                                     <h1 className="text-2xl font-bold text-gray-900">{property.name}</h1>
-                                    {property.property_type && (
-                                        <span className={`rounded-full px-3 py-1 text-sm font-medium ${propertyTypeStyles[property.property_type.name] || 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10'}`}>
-                                            {property.property_type.name}
-                                        </span>
-                                    )}
                                 </div>
                                 <p className="mt-2 flex items-center gap-1.5 text-gray-600">
                                     <MapPin size={16} />
@@ -159,11 +147,7 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                             const rawAmenitiesList = property.amenities
                                 ? Object.keys(property.amenities).filter(k => property.amenities[k] === true || property.amenities[k] === 1 || property.amenities[k] === '1')
                                 : (Array.isArray(property.amenities) ? property.amenities : []);
-                            const BASIC_AMENITY_KEYS = ['parking', 'security', 'generator', 'water_tank', 'elevator', 'cleaning_service'];
-                            const isApartment = property.property_type?.name === 'Apartment';
-                            const amenitiesList = isApartment
-                                ? rawAmenitiesList
-                                : rawAmenitiesList.filter(k => BASIC_AMENITY_KEYS.includes(k));
+                            const amenitiesList = rawAmenitiesList;
                             const proximityList = property.proximity
                                 ? Object.keys(property.proximity).filter(k => property.proximity[k] === true || property.proximity[k] === 1 || property.proximity[k] === '1')
                                 : (Array.isArray(property.proximity) ? property.proximity : []);

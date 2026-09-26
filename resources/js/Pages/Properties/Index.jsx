@@ -3,13 +3,6 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Search, Plus, MapPin, Building2, Edit, Trash2, Image as ImageIcon, DollarSign, CheckCircle, Users, Wrench } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-const propertyTypeStyles = {
-    'Office': 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10',
-    'Apartment': 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10',
-    'Warehouse': 'bg-orange-50 text-orange-700 ring-1 ring-orange-600/10',
-    'Commercial': 'bg-teal-50 text-teal-700 ring-1 ring-teal-600/10',
-};
-
 export default function PropertiesIndex({ properties, filters, isAdmin, currentUserId }) {
     const [search, setSearch] = useState(filters.search || '');
     const [propertyToDelete, setPropertyToDelete] = useState(null);
@@ -131,11 +124,6 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                     <div className="p-4">
                                         <div className="flex items-start justify-between">
                                             <h3 className="font-semibold text-gray-900">{property.name}</h3>
-                                            {property.property_type && (
-                                                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${propertyTypeStyles[property.property_type.name] || 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10'}`}>
-                                                    {property.property_type.name}
-                                                </span>
-                                            )}
                                         </div>
                                         <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
                                             <MapPin size={14} />
@@ -158,9 +146,7 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                                     ? amenities
                                                     : Object.keys(amenities).filter(k => amenities[k] === true || amenities[k] === 1 || amenities[k] === '1'))
                                                 : [];
-                                            const BASIC_AMENITY_KEYS = ['parking', 'security', 'generator', 'water_tank', 'elevator', 'cleaning_service'];
-                                            const isApartment = property.property_type?.name === 'Apartment';
-                                            const keys = isApartment ? rawKeys : rawKeys.filter(k => BASIC_AMENITY_KEYS.includes(k));
+                                            const keys = rawKeys;
                                             const keyIcons = { wifi: 'WiFi', parking: 'Parking', security: 'Security', gym: 'Gym', swimming_pool: 'Pool', restaurant: 'Restaurant', bar: 'Bar' };
                                             const visible = keys.filter(k => Object.keys(keyIcons).includes(k)).slice(0, 3);
                                             if (visible.length === 0) return null;
