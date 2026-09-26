@@ -140,7 +140,7 @@ export default function Welcome({ auth, canLogin, canRegister }) {
 
     return (
         <>
-            <Head title="Find your perfect space to rent | Ituze" />
+            <Head title="Find your perfect space to rent | Ituze-Qra Ltd" />
             <div className="min-h-screen bg-[#f6f8fa] text-slate-900">
                 <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
                     <div className="bg-[#063f67] text-white">
@@ -158,7 +158,7 @@ export default function Welcome({ auth, canLogin, canRegister }) {
                         </div>
                     </div>
                     <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-8">
-                        <Link href="/" className="flex items-center gap-2 text-2xl font-black tracking-tight text-[#064b78]"><span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#064b78]"><Building2 size={18} /></span> ituze<span className="text-orange-500">.</span></Link>
+                        <Link href="/" className="flex items-center gap-2 text-2xl font-black tracking-tight text-[#064b78]"><span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#064b78]"><Building2 size={18} /></span> Ituze-Qra Ltd</Link>
                         <nav className="hidden items-center gap-8 text-xs font-bold uppercase text-slate-700 md:flex"><a href="#featured" className="hover:text-[#078dcc]">Home</a><a href="#featured" className="hover:text-[#078dcc]">Properties</a><a href="#categories" className="hover:text-[#078dcc]">Property types</a><a href="#enquiry" className="hover:text-[#078dcc]">Enquiry</a></nav>
                         <div className="flex items-center gap-2">{auth?.user ? <Link href={route('dashboard')} className="rounded bg-[#08a8ec] px-4 py-2 text-xs font-bold uppercase text-white">Dashboard</Link> : <>{canLogin && <button type="button" onClick={() => setLoginOpen(true)} className="hidden px-3 py-2 text-xs font-bold uppercase text-slate-600 sm:block">Log in</button>}<button type="button" onClick={() => setInquiryOpen(true)} className="rounded bg-[#08a8ec] px-4 py-2 text-xs font-bold uppercase text-white">Inquiry</button></>}<button type="button" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button></div>
                     </div>
@@ -186,7 +186,7 @@ export default function Welcome({ auth, canLogin, canRegister }) {
                     <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
                         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
                             <div>
-                                <div className="flex items-center gap-2 text-3xl font-black">ituze<span className="text-orange-500">.</span></div>
+                                <div className="flex items-center gap-2 text-3xl font-black">Ituze-Qra Ltd</div>
                                 <p className="mt-4 max-w-xs text-sm leading-7 text-white/65">Beautiful spaces, better business, and a simpler way to rent in Rwanda.</p>
                                 <div className="mt-6 flex gap-3">
                                     <a href={`tel:${companyPhone}`} aria-label="Call Ituze" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition hover:bg-[#f97316]"><Phone size={17} /></a>
