@@ -43,9 +43,6 @@ class PropertyController extends Controller
                         ->orWhere('address', 'like', "%{$search}%");
                 });
             })
-            ->when($request->status, function ($query, $status) {
-                return $query->where('status', $status);
-            })
             ->latest();
 
         $properties = $query->paginate(10)->withQueryString();
@@ -54,7 +51,6 @@ class PropertyController extends Controller
             'properties' => $properties,
             'filters' => [
                 'search' => $request->search,
-                'status' => $request->status,
             ],
             'isAdmin' => $user->isAdmin(),
             'currentUserId' => $user->id,
@@ -82,8 +78,6 @@ class PropertyController extends Controller
                     'description' => 'nullable|string',
                     'cell_id' => 'required|exists:cells,id',
                     'property_type_id' => 'nullable|exists:property_types,id',
-                    'status' => 'required|in:active,inactive',
-                    'total_floors' => 'nullable|integer|min:1',
                     'bedrooms' => 'nullable|integer|min:0',
                     'bathrooms' => 'nullable|integer|min:0',
                     'amenities' => 'nullable|array',
@@ -98,9 +92,6 @@ class PropertyController extends Controller
                     'address.required' => '❌ Please enter the property address.',
                     'cell_id.required' => '📍 Please select the property location (down to Cell level).',
                     'cell_id.exists' => '📍 The selected cell is not valid.',
-                    'status.required' => 'Please select a status (Active or Inactive).',
-                    'total_floors.integer' => 'Total Floors must be a whole number.',
-                    'total_floors.min' => 'Total Floors must be at least 1 (counting the ground floor).',
                     'images.*.image' => '📸 One of the uploaded files is not a valid image.',
                     'images.*.mimes' => '📸 Only JPG, JPEG, PNG, and GIF image formats are allowed.',
                     'images.*.max'   => '📸 One of your property images is too large. Each image must be 2 MB or smaller.',
@@ -114,8 +105,6 @@ class PropertyController extends Controller
                 'name' => $request->name,
                 'address' => $request->address,
                 'description' => $request->description,
-                'status' => $request->status,
-                'total_floors' => $request->total_floors,
                 'bedrooms' => $this->apartmentValue($request, 'bedrooms'),
                 'bathrooms' => $this->apartmentValue($request, 'bathrooms'),
                 'amenities' => $request->input('amenities'),
@@ -202,8 +191,6 @@ class PropertyController extends Controller
                 'description' => 'nullable|string',
                 'cell_id' => 'required|exists:cells,id',
                 'property_type_id' => 'nullable|exists:property_types,id',
-                'status' => 'required|in:active,inactive',
-                'total_floors' => 'nullable|integer|min:1',
                 'bedrooms' => 'nullable|integer|min:0',
                 'bathrooms' => 'nullable|integer|min:0',
                 'amenities' => 'nullable|array',
@@ -219,7 +206,6 @@ class PropertyController extends Controller
                 'name.required' => '❌ Please enter a property name.',
                 'address.required' => '❌ Please enter the property address.',
                 'cell_id.required' => '📍 Please select the property location (down to Cell level).',
-                'total_floors.min' => 'Total Floors must be at least 1 (counting the ground floor).',
                 'images.*.max' => '📸 One of your property images is too large. Each image must be 2 MB or smaller.',
                 'images.*.mimes' => '📸 Only JPG, JPEG, PNG, and GIF image formats are allowed.',
             ]
@@ -231,8 +217,6 @@ class PropertyController extends Controller
             'name' => $request->name,
             'address' => $request->address,
             'description' => $request->description,
-            'status' => $request->status,
-            'total_floors' => $request->total_floors,
             'bedrooms' => $this->apartmentValue($request, 'bedrooms'),
             'bathrooms' => $this->apartmentValue($request, 'bathrooms'),
             'amenities' => $request->input('amenities'),

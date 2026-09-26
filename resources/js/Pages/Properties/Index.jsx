@@ -3,11 +3,6 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Search, Plus, MapPin, Building2, Edit, Trash2, Image as ImageIcon, DollarSign, CheckCircle, Users, Wrench } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-const statusStyles = {
-    active: 'bg-green-50 text-green-700 ring-1 ring-green-600/10',
-    inactive: 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10',
-};
-
 const propertyTypeStyles = {
     'Office': 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10',
     'Apartment': 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10',
@@ -17,7 +12,6 @@ const propertyTypeStyles = {
 
 export default function PropertiesIndex({ properties, filters, isAdmin, currentUserId }) {
     const [search, setSearch] = useState(filters.search || '');
-    const [status, setStatus] = useState(filters.status || '');
     const [propertyToDelete, setPropertyToDelete] = useState(null);
     const isFirstRender = useRef(true);
 
@@ -28,10 +22,10 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
         }
 
         const timeout = setTimeout(() => {
-            router.get(route('properties.index'), { search, status }, { preserveState: true, replace: true });
+            router.get(route('properties.index'), { search }, { preserveState: true, replace: true });
         }, 400);
         return () => clearTimeout(timeout);
-    }, [search, status]);
+    }, [search]);
 
     const confirmDelete = () => {
         if (!propertyToDelete) return;
@@ -58,16 +52,6 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="rounded-xl border border-gray-200 bg-gray-50/50 py-2.5 px-3 text-sm text-gray-600 transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                    >
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-
                     <Link
                         href={route('properties.create')}
                         className="flex items-center gap-1.5 rounded-xl bg-[#0E3B2E] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0a2e23]"
@@ -112,9 +96,6 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                             />
                                             <div className="absolute top-2 right-2">
-                                                <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusStyles[property.status]}`}>
-                                                    {property.status}
-                                                </span>
                                             </div>
                                             <div className="absolute bottom-2 left-2 flex flex-col gap-1">
                                                 <span className="inline-flex items-center gap-1 rounded-md bg-black/50 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
@@ -132,9 +113,6 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                         <div className="relative h-48 flex items-center justify-center bg-gray-100">
                                             <ImageIcon size={48} className="text-gray-300" />
                                             <div className="absolute top-2 right-2">
-                                                <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusStyles[property.status]}`}>
-                                                    {property.status}
-                                                </span>
                                             </div>
                                             <div className="absolute bottom-2 left-2 flex flex-col gap-1">
                                                 <span className="inline-flex items-center gap-1 rounded-md bg-gray-800/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
@@ -203,10 +181,6 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                                         {(() => {
                                                         const displayUnits = property.units_count !== undefined ? Number(property.units_count) : 0;
                                                         const label = `${displayUnits} unit${displayUnits === 1 ? '' : 's'}`;
-                                                        if (property.total_floors !== null && property.total_floors !== undefined && property.total_floors !== '') {
-                                                            const fl = Number(property.total_floors);
-                                                            return `${label} · ${fl} floor${fl === 1 ? '' : 's'}`;
-                                                        }
                                                         return label;
                                                     })()}
                                                     </span>

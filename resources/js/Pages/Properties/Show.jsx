@@ -49,15 +49,6 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                                 alt={property.name}
                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                             />
-                            <div className="absolute top-4 right-4">
-                                <span className={`rounded-full px-3 py-1.5 text-sm font-medium capitalize ${
-                                    property.status === 'active' 
-                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-600/10' 
-                                        : 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10'
-                                }`}>
-                                    {property.status}
-                                </span>
-                            </div>
                             <div className="absolute bottom-4 left-4 flex flex-col gap-1.5">
                                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
                                     <CheckCircle size={12} className="text-green-300" /> Vacant {property.units_vacant_count ?? 0}
@@ -73,15 +64,6 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                     ) : (
                         <div className="relative h-72 flex items-center justify-center bg-gray-100 group">
                             <ImageIcon size={64} className="text-gray-300" />
-                            <div className="absolute top-4 right-4">
-                                <span className={`rounded-full px-3 py-1.5 text-sm font-medium capitalize ${
-                                    property.status === 'active' 
-                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-600/10' 
-                                        : 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10'
-                                }`}>
-                                    {property.status}
-                                </span>
-                            </div>
                             <div className="absolute bottom-4 left-4 flex flex-col gap-1.5">
                                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-gray-800/60 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
                                     <CheckCircle size={12} className="text-green-300" /> Vacant {property.units_vacant_count ?? 0}
@@ -156,18 +138,8 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                                 </p>
                             </div>
                             <div className="text-center">
-                                <p className="text-xs text-gray-500">Floors</p>
-                                <p className="text-2xl font-bold text-[#0E3B2E]">
-                                    {property.total_floors ?? 'N/A'}
-                                </p>
-                            </div>
-                            <div className="text-center">
                                 <p className="text-2xl font-bold text-[#0E3B2E]">{property.images?.length || 0}</p>
                                 <p className="text-xs text-gray-500">Images</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-2xl font-bold text-[#0E3B2E] capitalize">{property.status}</p>
-                                <p className="text-xs text-gray-500">Status</p>
                             </div>
                             <div className="text-center col-span-2 md:col-span-1">
                                 <p className="text-xs text-gray-500 flex items-center justify-center gap-1">

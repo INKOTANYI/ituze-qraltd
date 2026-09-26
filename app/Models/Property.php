@@ -16,8 +16,6 @@ class Property extends Model
         'name',
         'address',
         'description',
-        'status',
-        'total_floors',
         'bedrooms',
         'bathrooms',
         'amenities',
@@ -25,7 +23,6 @@ class Property extends Model
     ];
 
     protected $casts = [
-        'total_floors' => 'integer',
         'bedrooms' => 'integer',
         'bathrooms' => 'integer',
         'amenities' => 'array',

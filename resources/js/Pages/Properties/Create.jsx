@@ -49,8 +49,6 @@ export default function PropertyCreate() {
         description: '',
         cell_id: '',
         property_type_id: '',
-        status: 'active',
-        total_floors: '',
         bedrooms: '',
         bathrooms: '',
         amenities: Object.fromEntries(ALL_AMENITIES.map(a => [a.key, false])),
@@ -159,7 +157,6 @@ export default function PropertyCreate() {
                 property_type_name: getPropertyTypeName(),
                 cell_id: data.cell_id || null,
                 ...locationNames,
-                total_floors: data.total_floors ? Number(data.total_floors) : null,
                 amenities: amenitiesPayload,
                 proximity: proximityPayload,
             };
@@ -277,12 +274,6 @@ export default function PropertyCreate() {
         if (!data.address?.trim()) missing.push('Address');
         if (!data.cell_id) missing.push('Location (Cell)');
 
-        if (data.total_floors !== '' && data.total_floors !== null && Number(data.total_floors) < 1) {
-            setBannerMsg('⚠️ Total Floors must be at least 1 (ground floor counts as 1).');
-            setBannerType('warning');
-            return;
-        }
-
         if (missing.length > 0) {
             setBannerMsg('⚠️ Please fill in all required fields: ' + missing.join(', '));
             setBannerType('warning');
@@ -304,8 +295,6 @@ export default function PropertyCreate() {
         formData.append('description', data.description);
         formData.append('cell_id', data.cell_id);
         formData.append('property_type_id', data.property_type_id);
-        formData.append('status', data.status);
-        if (data.total_floors !== '') formData.append('total_floors', data.total_floors);
         if (isApartment && data.bedrooms !== '') formData.append('bedrooms', data.bedrooms);
         if (isApartment && data.bathrooms !== '') formData.append('bathrooms', data.bathrooms);
 
@@ -419,22 +408,6 @@ export default function PropertyCreate() {
                                     {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
                                 </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Total Floors
-                                            <span className="ml-1 text-xs text-gray-400">(incl. ground)</span>
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={data.total_floors}
-                                            onChange={(e) => setData('total_floors', e.target.value)}
-                                            className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                            placeholder="e.g., 4 (ground = 1)"
-                                        />
-                                        {errors.total_floors && <p className="mt-1 text-sm text-red-500">{errors.total_floors}</p>}
-                                    </div>
-
                                 {isApartment && (
                                     <div className="rounded-2xl border border-[#0E3B2E]/10 bg-[#0E3B2E]/[0.03] p-4">
                                         <p className="text-sm font-semibold text-[#0E3B2E]">Apartment details</p>
@@ -547,18 +520,6 @@ export default function PropertyCreate() {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Status *</label>
-                                    <select
-                                        value={data.status}
-                                        onChange={(e) => setData('status', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                    >
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                    {errors.status && <p className="mt-1 text-sm text-red-500">{errors.status}</p>}
-                                </div>
                             </div>
                         </div>
 

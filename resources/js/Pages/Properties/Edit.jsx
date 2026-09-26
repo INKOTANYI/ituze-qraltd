@@ -81,8 +81,6 @@ export default function PropertyEdit({ property, canEdit }) {
         description: property.description || '',
         cell_id: property.cell_id || '',
         property_type_id: property.property_type_id || '',
-        status: property.status || 'active',
-        total_floors: property.total_floors !== null && property.total_floors !== undefined ? String(property.total_floors) : '',
         bedrooms: property.bedrooms !== null && property.bedrooms !== undefined ? String(property.bedrooms) : '',
         bathrooms: property.bathrooms !== null && property.bathrooms !== undefined ? String(property.bathrooms) : '',
         amenities: buildInitialBooleans(property.amenities, ALL_AMENITIES.map(a => a.key), false),
@@ -189,7 +187,6 @@ export default function PropertyEdit({ property, canEdit }) {
                 property_type_name: getPropertyTypeName(),
                 cell_id: data.cell_id || null,
                 ...locationNames,
-                total_floors: data.total_floors ? Number(data.total_floors) : null,
                 amenities: data.amenities,
                 proximity: data.proximity,
             };
@@ -296,12 +293,6 @@ export default function PropertyEdit({ property, canEdit }) {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (data.total_floors !== '' && data.total_floors !== null && Number(data.total_floors) < 1) {
-            setBannerMsg('⚠️ Total Floors must be at least 1 (ground floor counts as 1).');
-            setBannerType('warning');
-            return;
-        }
-
         const formData = new FormData();
         formData.append('_method', 'put');
         formData.append('name', data.name);
@@ -310,10 +301,6 @@ export default function PropertyEdit({ property, canEdit }) {
         formData.append('cell_id', data.cell_id);
         if (data.property_type_id) {
             formData.append('property_type_id', data.property_type_id);
-        }
-        formData.append('status', data.status);
-        if (data.total_floors !== '' && data.total_floors !== null && data.total_floors !== undefined) {
-            formData.append('total_floors', data.total_floors);
         }
         if (isApartment && data.bedrooms !== '' && data.bedrooms !== null && data.bedrooms !== undefined) {
             formData.append('bedrooms', data.bedrooms);
@@ -438,22 +425,6 @@ export default function PropertyEdit({ property, canEdit }) {
                                     {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
                                 </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Total Floors
-                                            <span className="ml-1 text-xs text-gray-400">(incl. ground)</span>
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={data.total_floors}
-                                            onChange={(e) => setData('total_floors', e.target.value)}
-                                            className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                            placeholder="e.g., 4 (ground = 1)"
-                                        />
-                                        {errors.total_floors && <p className="mt-1 text-sm text-red-500">{errors.total_floors}</p>}
-                                    </div>
-
                                 {isApartment && (
                                     <div className="rounded-2xl border border-[#0E3B2E]/10 bg-[#0E3B2E]/[0.03] p-4">
                                         <p className="text-sm font-semibold text-[#0E3B2E]">Apartment details</p>
@@ -569,18 +540,6 @@ export default function PropertyEdit({ property, canEdit }) {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Status *</label>
-                                    <select
-                                        value={data.status}
-                                        onChange={(e) => setData('status', e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
-                                    >
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                    {errors.status && <p className="mt-1 text-sm text-red-500">{errors.status}</p>}
-                                </div>
                             </div>
                         </div>
 
