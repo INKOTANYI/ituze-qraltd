@@ -25,7 +25,7 @@ class PropertyController extends Controller
         $query = Property::with(['owner', 'cell.sector.district.province', 'images'])
             ->withCount([
                 'units',
-                'units as units_vacant_count' => function ($q) { $q->where('status', 'vacant'); },
+                'units as units_available_count' => function ($q) { $q->where('status', 'available'); },
                 'units as units_occupied_count' => function ($q) { $q->where('status', 'occupied'); },
                 'units as units_maintenance_count' => function ($q) { $q->where('status', 'maintenance'); },
             ])
@@ -77,8 +77,6 @@ class PropertyController extends Controller
                     'address' => 'required|string|max:255',
                     'description' => 'nullable|string',
                     'cell_id' => 'required|exists:cells,id',
-                    'bedrooms' => 'nullable|integer|min:0',
-                    'bathrooms' => 'nullable|integer|min:0',
                     'amenities' => 'nullable|array',
                     'amenities.*' => 'boolean',
                     'proximity' => 'nullable|array',
@@ -103,8 +101,6 @@ class PropertyController extends Controller
                 'name' => $request->name,
                 'address' => $request->address,
                 'description' => $request->description,
-                'bedrooms' => $this->apartmentValue($request, 'bedrooms'),
-                'bathrooms' => $this->apartmentValue($request, 'bathrooms'),
                 'amenities' => $request->input('amenities'),
                 'proximity' => $request->input('proximity'),
             ]);
@@ -146,7 +142,7 @@ class PropertyController extends Controller
 
         $property->load(['owner', 'cell.sector.district.province', 'images', 'units.unitType']);
         $property->loadCount([
-            'units as units_vacant_count' => function ($q) { $q->where('status', 'vacant'); },
+            'units as units_available_count' => function ($q) { $q->where('status', 'available'); },
             'units as units_occupied_count' => function ($q) { $q->where('status', 'occupied'); },
             'units as units_maintenance_count' => function ($q) { $q->where('status', 'maintenance'); },
         ]);
@@ -188,8 +184,6 @@ class PropertyController extends Controller
                 'address' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'cell_id' => 'required|exists:cells,id',
-                'bedrooms' => 'nullable|integer|min:0',
-                'bathrooms' => 'nullable|integer|min:0',
                 'amenities' => 'nullable|array',
                 'amenities.*' => 'boolean',
                 'proximity' => 'nullable|array',
@@ -213,8 +207,6 @@ class PropertyController extends Controller
             'name' => $request->name,
             'address' => $request->address,
             'description' => $request->description,
-            'bedrooms' => $this->apartmentValue($request, 'bedrooms'),
-            'bathrooms' => $this->apartmentValue($request, 'bathrooms'),
             'amenities' => $request->input('amenities'),
             'proximity' => $request->input('proximity'),
         ]);
@@ -273,8 +265,4 @@ class PropertyController extends Controller
         }
     }
 
-    private function apartmentValue(Request $request, string $field)
-    {
-        return $request->input($field);
-    }
 }

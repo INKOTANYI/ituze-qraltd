@@ -3,9 +3,11 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Home, DollarSign, Edit, MapPin, Upload, Download, Trash2, FileText } from 'lucide-react';
 
 const statusStyles = {
-    vacant: 'bg-green-50 text-green-700 ring-1 ring-green-600/10',
+    available: 'bg-green-50 text-green-700 ring-1 ring-green-600/10',
     occupied: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10',
     maintenance: 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/10',
+    reserved: 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10',
+    inactive: 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10',
 };
 
 export default function UnitShow({ property, unit }) {

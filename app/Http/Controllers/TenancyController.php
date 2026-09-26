@@ -83,10 +83,10 @@ class TenancyController extends Controller
         DB::transaction(function () use ($data, $request, $unit) {
             $lockedUnit = Unit::whereKey($unit->id)->lockForUpdate()->firstOrFail();
 
-            if ($lockedUnit->status !== 'vacant' ||
+            if ($lockedUnit->status !== 'available' ||
                 $lockedUnit->tenancies()->where('status', 'active')->exists()) {
                 throw ValidationException::withMessages([
-                    'unit_id' => 'This unit is not vacant or already has an active tenancy.',
+                    'unit_id' => 'This unit is not available or already has an active tenancy.',
                 ]);
             }
 

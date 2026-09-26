@@ -44,7 +44,7 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                             />
                             <div className="absolute bottom-4 left-4 flex flex-col gap-1.5">
                                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
-                                    <CheckCircle size={12} className="text-green-300" /> Vacant {property.units_vacant_count ?? 0}
+                                    <CheckCircle size={12} className="text-green-300" /> Available {property.units_available_count ?? 0}
                                 </span>
                                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
                                     <Users size={12} className="text-blue-300" /> Occupied {property.units_occupied_count ?? 0}
@@ -59,7 +59,7 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                             <ImageIcon size={64} className="text-gray-300" />
                             <div className="absolute bottom-4 left-4 flex flex-col gap-1.5">
                                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-gray-800/60 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
-                                    <CheckCircle size={12} className="text-green-300" /> Vacant {property.units_vacant_count ?? 0}
+                                    <CheckCircle size={12} className="text-green-300" /> Available {property.units_available_count ?? 0}
                                 </span>
                                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-gray-800/60 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
                                     <Users size={12} className="text-blue-300" /> Occupied {property.units_occupied_count ?? 0}
@@ -120,9 +120,9 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                                 <p className="text-xs text-gray-500">Created Units</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-xs text-gray-500">Vacant Units</p>
+                                <p className="text-xs text-gray-500">Available Units</p>
                                 <p className="text-2xl font-bold text-[#0E3B2E]">
-                                    {property.units_vacant_count ?? 0}
+                                    {property.units_available_count ?? 0}
                                 </p>
                             </div>
                             <div className="text-center">
@@ -277,7 +277,7 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-                                                unit.status === 'vacant' 
+                                                unit.status === 'available'
                                                     ? 'bg-green-50 text-green-700 ring-1 ring-green-600/10' 
                                                     : unit.status === 'occupied'
                                                     ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10'

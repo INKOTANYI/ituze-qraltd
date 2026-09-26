@@ -13,13 +13,16 @@ class Unit extends Model
         'property_id',
         'unit_type_id',
         'unit_number',
+        'floor_number',
         'rent_amount',
+        'rent_frequency',
         'size_sqm',
         'description',
         'status',
     ];
 
     protected $casts = [
+        'floor_number' => 'integer',
         'rent_amount' => 'decimal:2',
         'size_sqm' => 'decimal:2',
     ];

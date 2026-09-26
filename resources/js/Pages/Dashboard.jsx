@@ -11,7 +11,7 @@ const cards = [
     { key: 'properties', label: 'Properties', icon: Building2, color: 'bg-emerald-50 text-emerald-700' },
     { key: 'units', label: 'Total units', icon: DoorOpen, color: 'bg-blue-50 text-blue-700' },
     { key: 'occupiedUnits', label: 'Occupied units', icon: Users, color: 'bg-violet-50 text-violet-700' },
-    { key: 'vacantUnits', label: 'Vacant units', icon: Home, color: 'bg-amber-50 text-amber-700' },
+    { key: 'vacantUnits', label: 'Available units', icon: Home, color: 'bg-amber-50 text-amber-700' },
 ];
 
 export default function Dashboard({ summary, recentProperties = [], recentTenancies = [] }) {
@@ -45,7 +45,7 @@ export default function Dashboard({ summary, recentProperties = [], recentTenanc
                     <div className="flex items-center gap-2 text-white/70"><Activity size={17} /><span className="text-sm">Portfolio occupancy</span></div>
                     <div className="mt-5 flex items-end gap-2"><span className="font-[Sora] text-4xl font-bold">{summary?.occupancyRate ?? 0}%</span><span className="mb-1 text-sm text-white/60">occupied</span></div>
                     <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-[#D9A441]" style={{ width: `${summary?.occupancyRate ?? 0}%` }} /></div>
-                    <p className="mt-3 text-xs text-white/60">{summary?.vacantUnits ?? 0} vacant · {summary?.maintenanceUnits ?? 0} under maintenance</p>
+                    <p className="mt-3 text-xs text-white/60">{summary?.vacantUnits ?? 0} available · {summary?.maintenanceUnits ?? 0} under maintenance</p>
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:col-span-2">
                     <div className="mb-4 flex items-center justify-between"><h2 className="font-[Sora] font-semibold text-gray-900">Recent properties</h2><Link href={route('properties.index')} className="text-sm font-medium text-[#0E3B2E] hover:underline">View all</Link></div>

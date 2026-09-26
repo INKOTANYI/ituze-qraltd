@@ -92,7 +92,7 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                             </div>
                                             <div className="absolute bottom-2 left-2 flex flex-col gap-1">
                                                 <span className="inline-flex items-center gap-1 rounded-md bg-black/50 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
-                                                    <CheckCircle size={10} className="text-green-300" /> Vacant {property.units_vacant_count ?? 0}
+                                                    <CheckCircle size={10} className="text-green-300" /> Available {property.units_available_count ?? 0}
                                                 </span>
                                                 <span className="inline-flex items-center gap-1 rounded-md bg-black/50 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
                                                     <Users size={10} className="text-blue-300" /> Occupied {property.units_occupied_count ?? 0}
@@ -109,7 +109,7 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                             </div>
                                             <div className="absolute bottom-2 left-2 flex flex-col gap-1">
                                                 <span className="inline-flex items-center gap-1 rounded-md bg-gray-800/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
-                                                    <CheckCircle size={10} className="text-green-300" /> Vacant {property.units_vacant_count ?? 0}
+                                                    <CheckCircle size={10} className="text-green-300" /> Available {property.units_available_count ?? 0}
                                                 </span>
                                                 <span className="inline-flex items-center gap-1 rounded-md bg-gray-800/60 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.03]">
                                                     <Users size={10} className="text-blue-300" /> Occupied {property.units_occupied_count ?? 0}

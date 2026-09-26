@@ -6,10 +6,12 @@ export default function UnitEdit({ property, unit, unitTypes }) {
     const { data, setData, errors, processing, put } = useForm({
         unit_type_id: unit.unit_type_id || '',
         unit_number: unit.unit_number || '',
+        floor_number: unit.floor_number ?? '',
         rent_amount: unit.rent_amount || '',
+        rent_frequency: unit.rent_frequency || 'monthly',
         size_sqm: unit.size_sqm || '',
         description: unit.description || '',
-        status: unit.status || 'vacant',
+        status: unit.status || 'available',
     });
 
     const handleSubmit = (e) => {
@@ -75,6 +77,12 @@ export default function UnitEdit({ property, unit, unitTypes }) {
                                 </div>
 
                                 <div>
+                                    <label className="block text-sm font-medium text-gray-700">Floor</label>
+                                    <input type="number" value={data.floor_number} onChange={(e) => setData('floor_number', e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm" placeholder="0 for ground floor, 1 for first floor" />
+                                    {errors.floor_number && <p className="mt-1 text-sm text-red-500">{errors.floor_number}</p>}
+                                </div>
+
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700">Monthly Rent (RWF) *</label>
                                     <div className="relative mt-1">
                                         <DollarSign size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -89,6 +97,18 @@ export default function UnitEdit({ property, unit, unitTypes }) {
                                         />
                                     </div>
                                     {errors.rent_amount && <p className="mt-1 text-sm text-red-500">{errors.rent_amount}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Rent Frequency *</label>
+                                    <select value={data.rent_frequency} onChange={(e) => setData('rent_frequency', e.target.value)} className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                    {errors.rent_frequency && <p className="mt-1 text-sm text-red-500">{errors.rent_frequency}</p>}
                                 </div>
 
                                 <div>
@@ -126,9 +146,11 @@ export default function UnitEdit({ property, unit, unitTypes }) {
                                         onChange={(e) => setData('status', e.target.value)}
                                         className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
                                     >
-                                        <option value="vacant">Vacant</option>
+                                        <option value="available">Available</option>
                                         <option value="occupied">Occupied</option>
-                                        <option value="maintenance">Under Maintenance</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="reserved">Reserved</option>
+                                        <option value="inactive">Inactive</option>
                                     </select>
                                     {errors.status && <p className="mt-1 text-sm text-red-500">{errors.status}</p>}
                                 </div>

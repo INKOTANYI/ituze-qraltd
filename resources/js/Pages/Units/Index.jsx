@@ -4,9 +4,11 @@ import { Search, Plus, DoorOpen, Edit, Trash2, ArrowLeft, DollarSign, Home } fro
 import { useEffect, useRef, useState } from 'react';
 
 const statusStyles = {
-    vacant: 'bg-green-50 text-green-700 ring-1 ring-green-600/10',
+    available: 'bg-green-50 text-green-700 ring-1 ring-green-600/10',
     occupied: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10',
     maintenance: 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/10',
+    reserved: 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10',
+    inactive: 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10',
 };
 
 export default function UnitsIndex({ property, units, unitTypes, filters, tenants = [] }) {
@@ -97,9 +99,11 @@ export default function UnitsIndex({ property, units, unitTypes, filters, tenant
                         className="rounded-xl border border-gray-200 bg-gray-50/50 py-2.5 px-3 text-sm text-gray-600 transition-all focus:border-[#0E3B2E] focus:bg-white focus:ring-2 focus:ring-[#0E3B2E]/15"
                     >
                         <option value="">All Status</option>
-                        <option value="vacant">Vacant</option>
+                        <option value="available">Available</option>
                         <option value="occupied">Occupied</option>
                         <option value="maintenance">Maintenance</option>
+                        <option value="reserved">Reserved</option>
+                        <option value="inactive">Inactive</option>
                     </select>
 
                     <Link
@@ -204,7 +208,7 @@ export default function UnitsIndex({ property, units, unitTypes, filters, tenant
                                             </td>
                                             <td className="px-5 py-3.5 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    {unit.status === 'vacant' && (
+                                                    {unit.status === 'available' && (
                                                         <button onClick={() => openAssignment(unit)} className="rounded-lg bg-[#0E3B2E]/10 px-2.5 py-1.5 text-xs font-medium text-[#0E3B2E] hover:bg-[#0E3B2E]/20">
                                                             Assign tenant
                                                         </button>

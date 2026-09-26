@@ -96,14 +96,18 @@ class UnitController extends Controller
                 'rent_amount' => 'required|numeric|min:0',
                 'size_sqm' => 'nullable|numeric|min:0',
                 'description' => 'nullable|string',
-                'status' => 'required|in:vacant,occupied,maintenance',
+                'floor_number' => 'nullable|integer|min:-10|max:200',
+                'rent_frequency' => 'required|in:monthly,weekly,daily,quarterly,yearly',
+                'status' => 'required|in:available,occupied,maintenance,reserved,inactive',
             ]);
 
             $unit = Unit::create([
                 'property_id' => $property->id,
                 'unit_type_id' => $request->unit_type_id,
                 'unit_number' => $request->unit_number,
+                'floor_number' => $request->floor_number,
                 'rent_amount' => $request->rent_amount,
+                'rent_frequency' => $request->rent_frequency,
                 'size_sqm' => $request->size_sqm,
                 'description' => $request->description,
                 'status' => $request->status,
@@ -182,13 +186,17 @@ class UnitController extends Controller
                 'rent_amount' => 'required|numeric|min:0',
                 'size_sqm' => 'nullable|numeric|min:0',
                 'description' => 'nullable|string',
-                'status' => 'required|in:vacant,occupied,maintenance',
+                'floor_number' => 'nullable|integer|min:-10|max:200',
+                'rent_frequency' => 'required|in:monthly,weekly,daily,quarterly,yearly',
+                'status' => 'required|in:available,occupied,maintenance,reserved,inactive',
             ]);
 
             $unit->update([
                 'unit_type_id' => $request->unit_type_id,
                 'unit_number' => $request->unit_number,
+                'floor_number' => $request->floor_number,
                 'rent_amount' => $request->rent_amount,
+                'rent_frequency' => $request->rent_frequency,
                 'size_sqm' => $request->size_sqm,
                 'description' => $request->description,
                 'status' => $request->status,
