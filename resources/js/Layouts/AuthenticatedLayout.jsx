@@ -128,8 +128,8 @@ export default function AuthenticatedLayout({ header, children }) {
                     }`}
                 >
                     <div className="flex h-16 items-center justify-between px-6">
-                        <Link href="/" className="flex items-center gap-2">
-                            <ApplicationLogo className="h-8 w-auto fill-current text-[#D9A441]" />
+                        <Link href="/" className="flex items-center gap-3">
+                            <ApplicationLogo className="h-9 w-9" />
                             <span className="font-[Sora] font-bold text-white tracking-tight">
                                 Ituze QR Ltd
                             </span>
@@ -289,9 +289,12 @@ export default function AuthenticatedLayout({ header, children }) {
             <footer className="bg-[#111827] px-4 py-8 sm:px-6">
                 <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-3">
                     <div>
-                        <span className="font-[Sora] text-lg font-bold text-white">
-                            Ituze QR Ltd
-                        </span>
+                        <div className="flex items-center gap-2.5">
+                            <ApplicationLogo className="h-7 w-7" />
+                            <span className="font-[Sora] text-lg font-bold text-white">
+                                Ituze QR Ltd
+                            </span>
+                        </div>
                         <p className="mt-2 text-sm text-white/50">
                             Simplifying property management for landlords and
                             tenants across Rwanda.

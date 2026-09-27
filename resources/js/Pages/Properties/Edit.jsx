@@ -26,6 +26,11 @@ const PROXIMITY = [
     { key: 'near_public_transport', label: 'Near Public Transport' },
 ];
 
+const imageSource = (path) => {
+    if (!path) return null;
+    return /^https?:\/\//i.test(path) ? path : `/storage/${path}`;
+};
+
 const getCsrfToken = () => {
     const meta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     if (meta) return meta;
@@ -544,7 +549,7 @@ export default function PropertyEdit({ property, canEdit }) {
                                                 }`}
                                             >
                                                 <img
-                                                    src={`/storage/${image.image_path}`}
+                                                    src={imageSource(image.image_path)}
                                                     alt={property.name}
                                                     className="h-24 w-full object-cover"
                                                 />

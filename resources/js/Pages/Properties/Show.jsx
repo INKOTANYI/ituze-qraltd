@@ -7,6 +7,11 @@ const statusStyles = {
     inactive: 'bg-gray-100 text-gray-600 ring-1 ring-gray-500/10',
 };
 
+const imageSource = (path) => {
+    if (!path) return null;
+    return /^https?:\/\//i.test(path) ? path : `/storage/${path}`;
+};
+
 export default function PropertyShow({ property, isAdmin, canEdit }) {
     const confirmDelete = () => {
         if (!canEdit) return;
@@ -38,7 +43,7 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                     {property.images && property.images.length > 0 ? (
                         <div className="relative h-72 overflow-hidden bg-gray-100">
                             <img
-                                src={`/storage/${property.images[0].image_path}`}
+                                src={imageSource(property.images[0].image_path)}
                                 alt={property.name}
                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                             />
@@ -218,7 +223,7 @@ export default function PropertyShow({ property, isAdmin, canEdit }) {
                                 {property.images.map((image, index) => (
                                     <div key={image.id} className="overflow-hidden rounded-xl">
                                         <img
-                                            src={`/storage/${image.image_path}`}
+                                            src={imageSource(image.image_path)}
                                             alt={`${property.name} - Image ${index + 1}`}
                                             className="h-32 w-full object-cover transition-transform hover:scale-105"
                                         />

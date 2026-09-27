@@ -4,46 +4,64 @@
     <meta charset="utf-8">
     <title>Users Report</title>
     <style>
+        @page {
+            size: A4 landscape;
+            margin: 24px 28px 38px;
+        }
+    </style>
+    <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 10px;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             color: #333;
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 16px;
             border-bottom: 2px solid #0E3B2E;
-            padding-bottom: 20px;
+            padding-bottom: 10px;
         }
         .header h1 {
             color: #0E3B2E;
             margin: 0;
-            font-size: 24px;
+            font-size: 20px;
         }
         .header p {
             color: #666;
             margin: 5px 0 0;
-            font-size: 14px;
+            font-size: 11px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 12px;
+            table-layout: fixed;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tfoot {
+            display: table-footer-group;
+        }
+        tr {
+            page-break-inside: avoid;
         }
         th {
             background-color: #0E3B2E;
             color: white;
-            padding: 12px 8px;
+            padding: 8px 5px;
             text-align: left;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 9px;
             text-transform: uppercase;
         }
         td {
-            padding: 10px 8px;
+            padding: 7px 5px;
             border-bottom: 1px solid #ddd;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
@@ -88,27 +106,31 @@
             font-size: 10px;
             font-weight: bold;
         }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            color: #666;
-            font-size: 10px;
-            border-top: 1px solid #ddd;
-            padding-top: 15px;
-        }
         .no-data {
             text-align: center;
             padding: 40px;
             color: #666;
             font-style: italic;
         }
+        .footer {
+            position: fixed;
+            bottom: -22px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #666;
+            font-size: 9px;
+        }
+        .footer .page:after {
+            content: counter(page);
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Users Report</h1>
-        <p>Generated on {{ now()->format('F j, Y, g:i A') }}</p>
-        <p>Total Users: {{ $users->count() }}</p>
+        <p>Generated on {{ $generatedAt->format('F j, Y, g:i A') }}</p>
+        <p>Total users in this report: {{ $users->count() }}</p>
     </div>
 
     @if($users->isEmpty())
@@ -127,7 +149,7 @@
                     <th>National ID</th>
                     <th>Location</th>
                     <th>Joined</th>
-                    <th>Expires</th>
+                    <th>Plan expires</th>
                 </tr>
             </thead>
             <tbody>
@@ -148,10 +170,16 @@
                                 {{ ucfirst($user->status) }}
                             </span>
                         </td>
-                        <td>{{ $user->national_id ?? '—' }}</td>
+                        <td>
+                            @if($user->national_id)
+                                {{ $user->identity_document_type === 'passport' ? 'Passport' : 'NIDA' }}: {{ $user->national_id }}
+                            @else
+                                —
+                            @endif
+                        </td>
                         <td>
                             @if($user->sector)
-                                {{ $user->sector->name }}, {{ $user->sector->district->name ?? '' }}
+                                {{ $user->sector->name }}, {{ $user->sector->district->name ?? '' }}, {{ $user->sector->district->province->name ?? '' }}
                             @else
                                 —
                             @endif
@@ -165,8 +193,7 @@
     @endif
 
     <div class="footer">
-        <p>Ituze QR Ltd - User Management System</p>
-        <p>This document is automatically generated and should not be modified.</p>
+        Ituze QR Ltd — User Management System · Page <span class="page"></span>
     </div>
 </body>
 </html>

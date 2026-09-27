@@ -15,12 +15,14 @@ class PropertyInquiry extends Model
         'visitor_phone',
         'message',
         'status',
+        'responded_at',
         'whatsapp_sent_at',
         'whatsapp_error',
     ];
 
     protected $casts = [
         'whatsapp_sent_at' => 'datetime',
+        'responded_at' => 'datetime',
     ];
 
     public function property()

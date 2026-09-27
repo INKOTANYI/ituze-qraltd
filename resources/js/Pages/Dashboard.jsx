@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import CompleteProfileModal from '@/Components/CompleteProfileModal';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Activity, ArrowUpRight, Building2, CalendarX, CheckCircle2,
-    DoorOpen, Home, MessageSquare, Plus, Settings2, Users,
+    DoorOpen, Home, IdCard, Mail, MapPin, MessageSquare, Phone, Plus, Settings2, Users,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -14,7 +14,12 @@ const cards = [
     { key: 'availableUnits', label: 'Available units', icon: Home, color: 'bg-amber-50 text-amber-700' },
 ];
 
-export default function Dashboard({ summary, recentProperties = [], recentTenancies = [], recentInquiries = [] }) {
+const imageSource = (path) => {
+    if (!path) return null;
+    return /^https?:\/\//i.test(path) ? path : `/storage/${path}`;
+};
+
+export default function Dashboard({ summary, ownerProfile, recentProperties = [], recentTenancies = [], recentInquiries = [] }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const [modalDismissed, setModalDismissed] = useState(false);
@@ -36,6 +41,22 @@ export default function Dashboard({ summary, recentProperties = [], recentTenanc
                 <Link href={route('properties.create')} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0E3B2E] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#0a2e23]"><Plus size={16} /> Add property</Link>
             </div>
 
+            {ownerProfile && (
+                <section className="mb-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                    <div className="mb-4">
+                        <h2 className="font-[Sora] font-semibold text-gray-900">Owner profile</h2>
+                        <p className="mt-1 text-xs text-gray-500">Your registration and verified profile details.</p>
+                    </div>
+                    <div className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                        <p><span className="block text-xs text-gray-400">Name</span><span className="font-medium text-gray-800">{ownerProfile.first_name} {ownerProfile.last_name}</span></p>
+                        <p className="flex items-start gap-2"><Mail size={15} className="mt-0.5 text-[#0E3B2E]" /><span><span className="block text-xs text-gray-400">Email</span><span className="font-medium text-gray-800">{ownerProfile.email}</span></span></p>
+                        <p className="flex items-start gap-2"><Phone size={15} className="mt-0.5 text-[#0E3B2E]" /><span><span className="block text-xs text-gray-400">Phone</span><span className="font-medium text-gray-800">{ownerProfile.phone}</span></span></p>
+                        <p className="flex items-start gap-2"><MapPin size={15} className="mt-0.5 text-[#0E3B2E]" /><span><span className="block text-xs text-gray-400">Address</span><span className="font-medium text-gray-800">{[ownerProfile.address, ownerProfile.sector, ownerProfile.district, ownerProfile.province].filter(Boolean).join(', ') || 'Not provided'}</span></span></p>
+                        <p className="flex items-start gap-2"><IdCard size={15} className="mt-0.5 text-[#0E3B2E]" /><span><span className="block text-xs text-gray-400">{ownerProfile.identity_document_type === 'passport' ? 'Passport' : 'NIDA'}</span><span className="font-medium text-gray-800">{ownerProfile.national_id || 'Not provided'}</span></span></p>
+                    </div>
+                </section>
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {cards.map(({ key, label, icon: Icon, color }) => <div key={key} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><div className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}><Icon size={19} /></div>{key === 'properties' && <Link href={route('properties.index')}><ArrowUpRight size={17} className="text-gray-400 hover:text-[#0E3B2E]" /></Link>}</div><p className="mt-4 font-[Sora] text-2xl font-bold text-gray-900">{summary?.[key] ?? 0}</p><p className="mt-1 text-sm text-gray-500">{label}</p></div>)}
             </div>
@@ -49,12 +70,36 @@ export default function Dashboard({ summary, recentProperties = [], recentTenanc
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:col-span-2">
                     <div className="mb-4 flex items-center justify-between"><h2 className="font-[Sora] font-semibold text-gray-900">Recent properties</h2><Link href={route('properties.index')} className="text-sm font-medium text-[#0E3B2E] hover:underline">View all</Link></div>
-                    {recentProperties.length ? <div className="grid gap-3 sm:grid-cols-2">{recentProperties.map(property => <Link key={property.id} href={route('properties.show', property.id)} className="flex items-center justify-between rounded-xl border border-gray-100 p-3 hover:border-[#D9A441]"><div className="flex min-w-0 items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#0E3B2E]/5"><Building2 size={17} className="text-[#0E3B2E]" /></div><div className="min-w-0"><p className="truncate text-sm font-semibold text-gray-800">{property.name}</p><p className="text-xs text-gray-500">{property.units_count ?? 0} units · {property.occupied_units_count ?? 0} occupied</p></div></div><ArrowUpRight size={15} className="text-gray-400" /></Link>)}</div> : <div className="rounded-xl bg-gray-50 p-6 text-center"><p className="text-sm text-gray-500">No properties yet.</p><Link href={route('properties.create')} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#0E3B2E]"><Plus size={14} /> Add your first property</Link></div>}
+                    {recentProperties.length ? <div className="grid gap-3 sm:grid-cols-2">{recentProperties.map(property => {
+                        const coverPath = property.images?.find(img => img.is_cover)?.image_path || property.images?.[0]?.image_path;
+                        return (
+                            <Link key={property.id} href={route('properties.show', property.id)} className="flex items-center justify-between rounded-xl border border-gray-100 p-3 hover:border-[#D9A441]">
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#0E3B2E]/5">
+                                        {coverPath ? (
+                                            <img
+                                                src={imageSource(coverPath)}
+                                                alt={property.name}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <Building2 size={17} className="text-[#0E3B2E]" />
+                                        )}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold text-gray-800">{property.name}</p>
+                                        <p className="text-xs text-gray-500">{property.units_count ?? 0} units · {property.occupied_units_count ?? 0} occupied</p>
+                                    </div>
+                                </div>
+                                <ArrowUpRight size={15} className="text-gray-400" />
+                            </Link>
+                        );
+                    })}</div> : <div className="rounded-xl bg-gray-50 p-6 text-center"><p className="text-sm text-gray-500">No properties yet.</p><Link href={route('properties.create')} className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#0E3B2E]"><Plus size={14} /> Add your first property</Link></div>}
                 </div>
             </div>
 
             <div className="mt-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"><div className="mb-4 flex items-center justify-between"><h2 className="font-[Sora] font-semibold text-gray-900">Recent occupancy</h2><Link href={route('tenants.index')} className="text-sm font-medium text-[#0E3B2E] hover:underline">View tenants</Link></div>{recentTenancies.length ? <div className="divide-y divide-gray-100">{recentTenancies.map(tenancy => <div key={tenancy.id} className="flex flex-col gap-2 py-3 first:pt-0 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50"><CheckCircle2 size={17} className="text-emerald-600" /></div><div><p className="text-sm font-semibold text-gray-800">{tenancy.tenant?.name}</p><p className="text-xs text-gray-500">{tenancy.unit?.property?.name} · Unit {tenancy.unit?.unit_number}</p></div></div><p className="text-xs text-gray-500">Started {new Date(tenancy.start_date).toLocaleDateString()}</p></div>)}</div> : <p className="py-4 text-sm text-gray-500">No active tenants yet. Assign tenants from a property’s units.</p>}</div>
-            <div className="mt-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"><div className="mb-4 flex items-center justify-between"><h2 className="font-[Sora] font-semibold text-gray-900">Visitor inquiries</h2><MessageSquare size={18} className="text-[#D9A441]" /></div>{recentInquiries.length ? <div className="divide-y divide-gray-100">{recentInquiries.map((inquiry) => <div key={inquiry.id} className="py-3 first:pt-0"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-gray-800">{inquiry.visitor_name}</p><p className="text-xs text-gray-500">{inquiry.property?.name} · Unit {inquiry.unit?.unit_number}</p></div><span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase text-amber-700">{inquiry.status}</span></div><p className="mt-2 line-clamp-2 text-sm text-gray-600">{inquiry.message}</p><p className="mt-2 text-xs text-gray-400">{inquiry.visitor_phone}</p></div>)}</div> : <p className="py-4 text-sm text-gray-500">No visitor inquiries yet.</p>}</div>
+            <div className="mt-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"><div className="mb-4 flex items-center justify-between"><div><h2 className="font-[Sora] font-semibold text-gray-900">Visitor inquiries</h2><p className="mt-1 text-xs text-gray-500">Mark an inquiry as responded after you contact the visitor.</p></div><MessageSquare size={18} className="text-[#D9A441]" /></div>{recentInquiries.length ? <div className="divide-y divide-gray-100">{recentInquiries.map((inquiry) => <div key={inquiry.id} className="py-4 first:pt-0"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold text-gray-800">{inquiry.visitor_name}</p><p className="text-xs text-gray-500">{inquiry.property?.name} · Unit {inquiry.unit?.unit_number}</p></div><span className={`w-fit rounded-full px-2 py-1 text-[10px] font-bold uppercase ${inquiry.status === 'responded' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{inquiry.status}</span></div><p className="mt-2 text-sm text-gray-600">{inquiry.message}</p><p className="mt-2 text-xs text-gray-400">{inquiry.visitor_phone}{inquiry.visitor_email ? ` · ${inquiry.visitor_email}` : ''}</p>{inquiry.status !== 'responded' && <button type="button" onClick={() => router.post(route('inquiries.responded', inquiry.id), {}, { preserveScroll: true })} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#0E3B2E] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#0a2e23]"><CheckCircle2 size={14} /> Mark as responded</button>}</div>)}</div> : <p className="py-4 text-sm text-gray-500">No visitor inquiries yet.</p>}</div>
         </AuthenticatedLayout>
     );
 }

@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'profile.complete' => \App\Http\Middleware\EnsureProfileIsComplete::class,
+            'owner.approved' => \App\Http\Middleware\EnsureOwnerIsApproved::class,
             'admin' => \App\Http\Middleware\EnsureIsAdmin::class,
         ]);
     })

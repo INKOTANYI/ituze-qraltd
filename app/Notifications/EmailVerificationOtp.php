@@ -13,12 +13,7 @@ class EmailVerificationOtp extends Notification implements ShouldQueue
 
     public function __construct(public string $code)
     {
-        $defaultQueue = config('queue.default');
-        if ($defaultQueue && $defaultQueue !== 'sync') {
-            $this->onConnection($defaultQueue);
-        } else {
-            $this->onConnection('deferred');
-        }
+        $this->onConnection('deferred');
     }
 
     public function via(object $notifiable): array

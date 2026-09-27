@@ -22,11 +22,11 @@ function getPasswordStrength(password) {
     return levels[score];
 }
 
-// Rwanda mobile prefixes: 078 = MTN, 072 & 073 = Airtel (formerly Tigo)
-const RWANDA_PHONE_REGEX = /^(078|072|073)\d{7}$/;
+// Rwanda mobile prefixes: 078/079 = MTN, 072/073 = Airtel.
+const RWANDA_PHONE_REGEX = /^(078|079|072|073)\d{7}$/;
 
 function getNetwork(phone) {
-    if (phone.startsWith('078')) return 'MTN';
+    if (phone.startsWith('078') || phone.startsWith('079')) return 'MTN';
     if (phone.startsWith('072') || phone.startsWith('073')) return 'Airtel';
     return null;
 }
@@ -246,8 +246,8 @@ export default function Register() {
                     )}
                     {data.phone !== '' && !phoneValid && (
                         <p className="mt-1 text-xs text-red-500">
-                            Enter a valid 10-digit MTN (078) or Airtel
-                            (072/073) number
+                            Enter a valid 10-digit Rwanda mobile number
+                            (072, 073, 078, or 079)
                         </p>
                     )}
                     <InputError message={errors.phone} className="mt-1" />

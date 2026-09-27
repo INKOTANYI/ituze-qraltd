@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -36,6 +38,18 @@ class UserController extends Controller
     public function index(Request $request): InertiaResponse
     {
         $users = $this->filteredUsers($request)->paginate(10)->withQueryString();
+        $users->getCollection()->transform(function (User $user) {
+            $expiresAt = $user->expires_at;
+            $user->setAttribute('plan_is_expired', !$user->isAdmin() && $user->isExpired());
+            $user->setAttribute(
+                'plan_remaining_days',
+                $expiresAt && !$user->isAdmin()
+                    ? max(0, (int) now()->startOfDay()->diffInDays($expiresAt->copy()->startOfDay(), false))
+                    : null
+            );
+
+            return $user;
+        });
 
         return Inertia::render('Admin/Users', [
             'users' => $users,
@@ -45,6 +59,41 @@ class UserController extends Controller
                 'status' => $request->input('status'),
             ],
         ]);
+    }
+
+    public function updatePlan(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($user->role === 'owner', 404);
+
+        $validated = $request->validate([
+            'renew' => ['sometimes', 'accepted'],
+            'expires_at' => ['sometimes', 'required', 'date', 'after:today'],
+        ]);
+
+        if (empty($validated['renew']) && !isset($validated['expires_at'])) {
+            return back()->withErrors(['plan' => 'Choose a new plan end date or renew for one year.']);
+        }
+
+        $newExpiry = DB::transaction(function () use ($user, $validated): Carbon {
+            $lockedUser = User::query()->lockForUpdate()->findOrFail($user->id);
+            abort_unless($lockedUser->role === 'owner', 404);
+
+            if (!empty($validated['renew'])) {
+                $currentExpiry = $lockedUser->expires_at;
+                $renewalStart = $currentExpiry && $currentExpiry->isFuture()
+                    ? $currentExpiry
+                    : now();
+                $newExpiry = $renewalStart->copy()->addYear();
+            } else {
+                $newExpiry = Carbon::parse($validated['expires_at'])->endOfDay();
+            }
+
+            $lockedUser->forceFill(['expires_at' => $newExpiry])->save();
+
+            return $newExpiry;
+        });
+
+        return back()->with('status', 'Owner plan updated. Access is available until '.$newExpiry->toDateString().'.');
     }
 
     public function destroy(Request $request, User $user): RedirectResponse
@@ -98,9 +147,15 @@ class UserController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $users = $this->filteredUsers($request)->get();
+        $users = User::query()
+            ->with('sector.district.province')
+            ->orderBy('id')
+            ->get();
 
-        $pdf = Pdf::loadView('admin.users-pdf', ['users' => $users]);
+        $pdf = Pdf::loadView('admin.users-pdf', [
+            'users' => $users,
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'landscape');
 
         return $pdf->download('users-'.now()->format('Y-m-d').'.pdf');
     }

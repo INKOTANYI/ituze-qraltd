@@ -26,7 +26,7 @@ const roleStyles = {
 
 function formatDate(value) {
     if (!value) return '—';
-    return new Date(value).toLocaleDateString();
+    return new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString();
 }
 
 function toInputDate(value) {
@@ -35,8 +35,24 @@ function toInputDate(value) {
 }
 
 function PlanBadge({ user }) {
+    if (user.role === 'admin') {
+        return (
+            <span className="rounded-full bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 ring-1 ring-gray-600/10">
+                Not applicable
+            </span>
+        );
+    }
+
+    if (user.status !== 'approved') {
+        return (
+            <span className="rounded-full bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 ring-1 ring-gray-600/10">
+                Not active
+            </span>
+        );
+    }
+
     const days = user.plan_remaining_days ?? 0;
-    const expired = user.plan_is_expired || days <= 0;
+    const expired = user.plan_is_expired;
 
     if (expired) {
         return (
@@ -49,7 +65,7 @@ function PlanBadge({ user }) {
     if (days <= 30) {
         return (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-600/10">
-                {days} day{days === 1 ? '' : 's'} left
+                {days === 0 ? 'Expires today' : `${days} day${days === 1 ? '' : 's'} left`}
             </span>
         );
     }
@@ -102,7 +118,7 @@ export default function Users({ users, filters }) {
 
     const openPlan = (user) => {
         setPlanUser(user);
-        setPlanDate(toInputDate(user.plan_expires_at));
+        setPlanDate(toInputDate(user.expires_at));
     };
 
     const closePlan = () => {
@@ -114,7 +130,7 @@ export default function Users({ users, filters }) {
         setProcessing(true);
         router.patch(
             route('admin.users.plan', planUser.id),
-            { plan_expires_at: planDate },
+            { expires_at: planDate },
             {
                 preserveScroll: true,
                 onFinish: () => {
@@ -368,12 +384,13 @@ export default function Users({ users, filters }) {
                                         <td className="px-5 py-3.5">
                                             <div className="space-y-1">
                                                 <PlanBadge user={user} />
-                                                <p className="text-xs text-gray-400">
-                                                    Until{' '}
-                                                    {formatDate(
-                                                        user.plan_expires_at,
-                                                    )}
-                                                </p>
+                                                {user.role === 'admin' ? (
+                                                    <p className="text-xs text-gray-400">Owner plan not applicable</p>
+                                                ) : (
+                                                    <p className="text-xs text-gray-400">
+                                                        {user.expires_at ? `Until ${formatDate(user.expires_at)}` : 'No expiry date set'}
+                                                    </p>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-5 py-3.5 text-xs text-gray-400">
@@ -383,10 +400,11 @@ export default function Users({ users, filters }) {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     type="button"
+                                                    disabled={user.role === 'admin'}
                                                     onClick={() =>
                                                         openPlan(user)
                                                     }
-                                                    className="inline-flex items-center gap-1 rounded-lg border border-[#0E3B2E]/20 px-2.5 py-1.5 text-xs font-medium text-[#0E3B2E] transition-colors hover:bg-[#0E3B2E]/5"
+                                                    className="inline-flex items-center gap-1 rounded-lg border border-[#0E3B2E]/20 px-2.5 py-1.5 text-xs font-medium text-[#0E3B2E] transition-colors hover:bg-[#0E3B2E]/5 disabled:cursor-not-allowed disabled:opacity-40"
                                                 >
                                                     <CalendarClock size={14} />
                                                     Plan
@@ -467,8 +485,8 @@ export default function Users({ users, filters }) {
                             Update plan
                         </h3>
                         <p className="mt-1 text-sm text-gray-500">
-                            {planUser.name} — registration is valid for one
-                            year. Remaining:{' '}
+                            {planUser.name} — the subscription starts from
+                            approval/renewal. Remaining:{' '}
                             {planUser.plan_is_expired
                                 ? 'expired'
                                 : `${planUser.plan_remaining_days} day${planUser.plan_remaining_days === 1 ? '' : 's'}`}

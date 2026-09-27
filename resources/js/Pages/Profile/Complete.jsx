@@ -1,68 +1,38 @@
 import InputError from '@/Components/InputError';
 import InlineAlert from '@/Components/InlineAlert';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { IdCard, Camera, MapPin, Loader2, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 
-export default function Complete() {
+export default function Complete({ registrationDetails, locations }) {
+    const { auth } = usePage().props;
+    const registration = registrationDetails ?? auth.user;
+    const provinces = locations?.provinces ?? [];
+    const districts = locations?.districts ?? [];
+    const sectors = locations?.sectors ?? [];
     const { data, setData, post, processing, errors } = useForm({
         national_id: '',
+        identity_document_type: 'nida',
+        address: '',
         profile_photo: null,
         sector_id: '',
     });
 
     const [preview, setPreview] = useState(null);
-    const [provinces, setProvinces] = useState([]);
-    const [districts, setDistricts] = useState([]);
-    const [sectors, setSectors] = useState([]);
     const [selectedProvince, setSelectedProvince] = useState('');
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [locError, setLocError] = useState('');
 
+    const availableDistricts = useMemo(
+        () => districts.filter((district) => String(district.province_id) === selectedProvince),
+        [districts, selectedProvince],
+    );
+    const availableSectors = useMemo(
+        () => sectors.filter((sector) => String(sector.district_id) === selectedDistrict),
+        [sectors, selectedDistrict],
+    );
     const hasErrors = Object.keys(errors).length > 0;
-
-    useEffect(() => {
-        fetch('/api/provinces')
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to load provinces');
-                return res.json();
-            })
-            .then(data => setProvinces(data))
-            .catch(e => {
-                console.error(e);
-                setLocError('⚠️ Failed to load location data. Please refresh the page or check if the PHP/Laravel server is running on port 8000.');
-            });
-    }, []);
-
-    useEffect(() => {
-        if (selectedProvince) {
-            fetch(`/api/districts/${selectedProvince}`)
-                .then(res => { if (!res.ok) throw new Error('Bad response'); return res.json(); })
-                .then(data => {
-                    setDistricts(data);
-                    setSectors([]);
-                    setSelectedDistrict('');
-                    setData('sector_id', '');
-                })
-                .catch(e => {
-                    console.error(e);
-                    setLocError('⚠️ Failed to load districts. Please try again.');
-                });
-        }
-    }, [selectedProvince]);
-
-    useEffect(() => {
-        if (selectedDistrict) {
-            fetch(`/api/sectors/${selectedDistrict}`)
-                .then(res => { if (!res.ok) throw new Error('Bad response'); return res.json(); })
-                .then(data => setSectors(data))
-                .catch(e => {
-                    console.error(e);
-                    setLocError('⚠️ Failed to load sectors. Please try again.');
-                });
-        }
-    }, [selectedDistrict]);
 
     const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB (matches Laravel max:2048)
 
@@ -102,7 +72,8 @@ export default function Complete() {
         // Final client-side pre-flight sanity check BEFORE sending to server
         const missing = [];
         if (!data.profile_photo) missing.push('Profile Photo');
-        if (!data.national_id || data.national_id.trim() === '') missing.push('National ID Number');
+        if (!data.national_id || data.national_id.trim() === '') missing.push('NIDA or Passport Number');
+        if (!data.address || data.address.trim() === '') missing.push('Address');
         if (!data.sector_id) missing.push('Location (Sector)');
 
         if (missing.length > 0) {
@@ -161,8 +132,10 @@ export default function Complete() {
                                 <div>
                                     <div className="font-semibold mb-1">Please fix the following errors and try again:</div>
                                     <ul className="list-disc pl-5 space-y-0.5 text-xs">
-                                        {errors.national_id && <li>National ID: {errors.national_id}</li>}
-                                        {errors.profile_photo && <li>Profile Photo: {errors.profile_photo}</li>}
+                                                {errors.national_id && <li>NIDA or Passport Number: {errors.national_id}</li>}
+                                                {errors.identity_document_type && <li>Identification document: {errors.identity_document_type}</li>}
+                                                {errors.address && <li>Address: {errors.address}</li>}
+                                                {errors.profile_photo && <li>Profile Photo: {errors.profile_photo}</li>}
                                         {errors.sector_id && <li>Location (Sector): {errors.sector_id}</li>}
                                     </ul>
                                 </div>
@@ -173,6 +146,27 @@ export default function Complete() {
             )}
 
             <form onSubmit={submit} className="mt-7 space-y-5">
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {[
+                        ['First name', registration.first_name],
+                        ['Last name', registration.last_name],
+                        ['Email', registration.email],
+                        ['Phone number', registration.phone],
+                    ].map(([label, value]) => (
+                        <div key={label}>
+                            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                                {label}
+                            </label>
+                            <input
+                                value={value ?? ''}
+                                readOnly
+                                aria-readonly="true"
+                                className={`${selectBase} cursor-not-allowed bg-gray-100 text-gray-500`}
+                            />
+                        </div>
+                    ))}
+                </div>
+
                 <div className="flex flex-col items-center">
                     <label
                         htmlFor="profile_photo"
@@ -210,10 +204,30 @@ export default function Complete() {
 
                 <div>
                     <label
-                        htmlFor="national_id"
+                        htmlFor="identity_document_type"
                         className="mb-1.5 block text-sm font-medium text-gray-700"
                     >
-                        National ID Number
+                        Identification document
+                    </label>
+                    <select
+                        id="identity_document_type"
+                        value={data.identity_document_type}
+                        onChange={(e) => setData('identity_document_type', e.target.value)}
+                        className={selectBase}
+                        required
+                    >
+                        <option value="nida">NIDA</option>
+                        <option value="passport">Passport</option>
+                    </select>
+                    <InputError
+                        message={errors.identity_document_type}
+                        className="mt-1"
+                    />
+                    <label
+                        htmlFor="national_id"
+                        className="mb-1.5 mt-4 block text-sm font-medium text-gray-700"
+                    >
+                        {data.identity_document_type === 'passport' ? 'Passport number' : 'NIDA number'}
                     </label>
                     <div className="group relative">
                         <IdCard
@@ -224,7 +238,7 @@ export default function Complete() {
                             id="national_id"
                             name="national_id"
                             value={data.national_id}
-                            placeholder="1 1234 5678901 2 34"
+                            placeholder={data.identity_document_type === 'passport' ? 'Enter passport number' : 'Enter NIDA number'}
                             onChange={(e) =>
                                 setData('national_id', e.target.value)
                             }
@@ -236,6 +250,22 @@ export default function Complete() {
                         message={errors.national_id}
                         className="mt-1"
                     />
+                </div>
+
+                <div>
+                    <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-gray-700">
+                        Physical address
+                    </label>
+                    <input
+                        id="address"
+                        value={data.address}
+                        onChange={(e) => setData('address', e.target.value)}
+                        placeholder="Village, street, or nearest landmark"
+                        className={selectBase}
+                        maxLength={255}
+                        required
+                    />
+                    <InputError message={errors.address} className="mt-1" />
                 </div>
 
                 <div>
@@ -253,6 +283,7 @@ export default function Complete() {
                             value={selectedProvince}
                             onChange={(e) => {
                                 setSelectedProvince(e.target.value);
+                                setSelectedDistrict('');
                                 setData('sector_id', '');
                             }}
                             className={selectBase}
@@ -272,7 +303,7 @@ export default function Complete() {
                             className={selectBase}
                         >
                             <option value="">Select District</option>
-                            {districts.map(district => (
+                            {availableDistricts.map(district => (
                                 <option key={district.id} value={district.id}>{district.name}</option>
                             ))}
                         </select>
@@ -283,7 +314,7 @@ export default function Complete() {
                             className={selectBase}
                         >
                             <option value="">Select Sector</option>
-                            {sectors.map(sector => (
+                            {availableSectors.map(sector => (
                                 <option key={sector.id} value={sector.id}>{sector.name}</option>
                             ))}
                         </select>

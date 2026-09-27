@@ -14,25 +14,98 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    $filters = $request->validate([
+        'search' => ['nullable', 'string', 'max:120'],
+        'category' => ['nullable', 'in:offices,apartments,coffee-shops,commercial-buildings,warehouses'],
+        'province_id' => ['nullable', 'integer', 'exists:provinces,id'],
+        'district_id' => ['nullable', 'integer', 'exists:districts,id'],
+        'sector_id' => ['nullable', 'integer', 'exists:sectors,id'],
+        'price_range' => ['nullable', 'regex:/^(any|under-500000|500000-1500000|1500000-5000000|5000000-plus)$/'],
+    ]);
+
+    $categoryTypeNames = [
+        'offices' => ['Office'],
+        'apartments' => ['Apartment', 'Studio', '1 Bedroom', '2 Bedrooms', '3 Bedrooms', '4+ Bedrooms'],
+        'coffee-shops' => ['Coffee Shop'],
+        'commercial-buildings' => ['Commercial Building', 'Commercial Space', 'Shop'],
+        'warehouses' => ['Warehouse'],
+    ];
+    $searchTerm = trim($filters['search'] ?? '');
+    $categoryTypes = $categoryTypeNames[$filters['category'] ?? ''] ?? [];
+    $priceRange = $filters['price_range'] ?? 'any';
+    $applyUnitFilters = function ($unitQuery) use ($categoryTypes, $priceRange) {
+        $unitQuery->where('status', 'available')
+            ->when($categoryTypes, fn ($query) => $query->whereHas('unitType', fn ($typeQuery) => $typeQuery->whereIn('name', $categoryTypes)))
+            ->when($priceRange !== 'any', function ($query) use ($priceRange) {
+                match ($priceRange) {
+                    'under-500000' => $query->where('rent_amount', '<', 500000),
+                    '500000-1500000' => $query->whereBetween('rent_amount', [500000, 1500000]),
+                    '1500000-5000000' => $query->whereBetween('rent_amount', [1500000, 5000000]),
+                    '5000000-plus' => $query->where('rent_amount', '>=', 5000000),
+                    default => null,
+                };
+            });
+    };
+
     $properties = \App\Models\Property::query()
-        ->whereHas('units', fn ($query) => $query->where('status', 'available'))
+        ->whereHas('units', $applyUnitFilters)
+        ->when(!empty($filters['province_id']), fn ($query) => $query->whereHas('cell.sector.district.province', fn ($locationQuery) => $locationQuery->whereKey($filters['province_id'])))
+        ->when(!empty($filters['district_id']), fn ($query) => $query->whereHas('cell.sector.district', fn ($locationQuery) => $locationQuery->whereKey($filters['district_id'])))
+        ->when(!empty($filters['sector_id']), fn ($query) => $query->whereHas('cell.sector', fn ($locationQuery) => $locationQuery->whereKey($filters['sector_id'])))
+        ->when($searchTerm !== '', function ($query) use ($searchTerm) {
+            $like = '%' . $searchTerm . '%';
+            $query->where(function ($propertyQuery) use ($like) {
+                $propertyQuery
+                    ->where('name', 'like', $like)
+                    ->orWhere('address', 'like', $like)
+                    ->orWhereHas('cell.sector', fn ($locationQuery) => $locationQuery->where('name', 'like', $like))
+                    ->orWhereHas('cell.sector.district', fn ($locationQuery) => $locationQuery->where('name', 'like', $like))
+                    ->orWhereHas('cell.sector.district.province', fn ($locationQuery) => $locationQuery->where('name', 'like', $like));
+            });
+        })
         ->with([
             'images:id,property_id,image_path,is_cover',
             'cell.sector.district.province',
-            'units' => fn ($query) => $query
-                ->where('status', 'available')
-                ->with('unitType:id,name')
-                ->latest(),
+            'units' => function ($query) use ($applyUnitFilters) {
+                $applyUnitFilters($query);
+                $query->with('unitType:id,name')->latest();
+            },
         ])
         ->latest()
-        ->take(12)
+        ->take(24)
         ->get();
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'properties' => $properties,
+        'propertyCategories' => [
+            ['slug' => 'offices', 'name' => 'Offices'],
+            ['slug' => 'apartments', 'name' => 'Apartments'],
+            ['slug' => 'coffee-shops', 'name' => 'Coffee Shops'],
+            ['slug' => 'commercial-buildings', 'name' => 'Commercial Buildings'],
+            ['slug' => 'warehouses', 'name' => 'Warehouses'],
+        ],
+        'locations' => [
+            'provinces' => \App\Models\Province::query()->orderBy('name')->get(['id', 'name']),
+            'districts' => \App\Models\District::query()->orderBy('name')->get(['id', 'name', 'province_id']),
+            'sectors' => \App\Models\Sector::query()->orderBy('name')->get(['id', 'name', 'district_id']),
+        ],
+        'searchFilters' => [
+            'search' => $searchTerm,
+            'category' => $filters['category'] ?? '',
+            'province_id' => $filters['province_id'] ?? '',
+            'district_id' => $filters['district_id'] ?? '',
+            'sector_id' => $filters['sector_id'] ?? '',
+            'price_range' => $priceRange,
+            'active' => $request->filled('search')
+                || $request->filled('category')
+                || $request->filled('province_id')
+                || $request->filled('district_id')
+                || $request->filled('sector_id')
+                || ($priceRange !== 'any'),
+        ],
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
@@ -40,11 +113,25 @@ Route::get('/', function () {
 
 Route::get('/spaces/{property}', [PublicPropertyController::class, 'show'])->name('public.properties.show');
 Route::post('/spaces/{property}/inquiries', [PublicPropertyController::class, 'inquire'])->name('public.properties.inquiries.store');
+Route::post('/inquiries/{inquiry}/responded', [PublicPropertyController::class, 'markResponded'])
+    ->middleware(['auth', 'verified', 'profile.complete', 'owner.approved'])
+    ->name('inquiries.responded');
+
+Route::get('/account/status', function (\Illuminate\Http\Request $request) {
+    abort_unless($request->user()->role === 'owner', 404);
+
+    return Inertia::render('Account/Status', [
+        'status' => $request->user()->status,
+        'expired' => $request->user()->isExpired(),
+    ]);
+})->middleware(['auth', 'verified'])->name('account.status');
 
 Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
     $user = $request->user();
+    $user->loadMissing('sector.district.province');
     $properties = \App\Models\Property::query()
         ->when(!$user->isAdmin(), fn ($query) => $query->where('owner_id', $user->id))
+        ->with(['images'])
         ->withCount([
             'units',
             'units as occupied_units_count' => fn ($query) => $query->where('status', 'occupied'),
@@ -82,8 +169,20 @@ Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
         'recentProperties' => $properties->take(4)->values(),
         'recentTenancies' => $recentTenancies,
         'recentInquiries' => $recentInquiries,
+        'ownerProfile' => $user->isAdmin() ? null : [
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'address' => $user->address,
+            'identity_document_type' => $user->identity_document_type,
+            'national_id' => $user->national_id,
+            'sector' => $user->sector?->name,
+            'district' => $user->sector?->district?->name,
+            'province' => $user->sector?->district?->province?->name,
+        ],
     ]);
-})->middleware(['auth', 'verified', 'profile.complete'])->name('dashboard');
+})->middleware(['auth', 'verified', 'profile.complete', 'owner.approved'])->name('dashboard');
 
 Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -92,10 +191,19 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/complete-profile', function () {
-        return Inertia::render('Profile/Complete');
-    })->name('profile.complete');
-    Route::post('/complete-profile', [ProfileCompletionController::class, 'store'])->name('profile.complete.store');
+    Route::get('/complete-profile', function (\Illuminate\Http\Request $request) {
+        return Inertia::render('Profile/Complete', [
+            'registrationDetails' => $request->user()->only(['first_name', 'last_name', 'email', 'phone']),
+            'locations' => [
+                'provinces' => \App\Models\Province::query()->orderBy('name')->get(['id', 'name']),
+                'districts' => \App\Models\District::query()->orderBy('name')->get(['id', 'name', 'province_id']),
+                'sectors' => \App\Models\Sector::query()->orderBy('name')->get(['id', 'name', 'district_id']),
+            ],
+        ]);
+    })->middleware('verified')->name('profile.complete');
+    Route::post('/complete-profile', [ProfileCompletionController::class, 'store'])
+        ->middleware('verified')
+        ->name('profile.complete.store');
 
     Route::get('/api/provinces', [LocationController::class, 'provinces'])->name('api.provinces');
     Route::get('/api/districts/{province}', [LocationController::class, 'districts'])->name('api.districts');
@@ -110,7 +218,7 @@ Route::middleware('auth')->group(function () {
     })->name('api.property-types');
 
     // Property management routes (requires verified email and completed profile)
-    Route::middleware(['verified', 'profile.complete'])->prefix('properties')->name('properties.')->group(function () {
+    Route::middleware(['verified', 'profile.complete', 'owner.approved'])->prefix('properties')->name('properties.')->group(function () {
         Route::get('/', [PropertyController::class, 'index'])->name('index');
         Route::get('/create', [PropertyController::class, 'create'])->name('create');
         Route::post('/', [PropertyController::class, 'store'])->name('store');
@@ -137,8 +245,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/{property}/tenants', [TenancyController::class, 'storeTenant'])->name('tenants.store');
     });
 
-    Route::middleware(['verified', 'profile.complete'])->get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
-    Route::middleware(['verified', 'profile.complete'])->post('/tenants', [TenantController::class, 'store'])->name('tenants.store');
+    Route::middleware(['verified', 'profile.complete', 'owner.approved'])->get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
+    Route::middleware(['verified', 'profile.complete', 'owner.approved'])->post('/tenants', [TenantController::class, 'store'])->name('tenants.store');
 
     Route::post('/api/ai/generate-property-description', [\App\Http\Controllers\AIDescriptionController::class, 'generatePropertyDescription'])->name('api.ai.generate-property-description');
 });
@@ -149,6 +257,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/approvals/{user}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users');
+    Route::patch('/users/{user}/plan', [AdminUserController::class, 'updatePlan'])->name('users.plan');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     Route::get('/users/export/excel', [AdminUserController::class, 'exportExcel'])->name('users.export.excel');
     Route::get('/users/export/pdf', [AdminUserController::class, 'exportPdf'])->name('users.export.pdf');

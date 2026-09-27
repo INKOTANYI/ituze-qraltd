@@ -3,6 +3,11 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Search, Plus, MapPin, Building2, Edit, Trash2, Image as ImageIcon, DollarSign, CheckCircle, Users, Wrench } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+const imageSource = (path) => {
+    if (!path) return null;
+    return /^https?:\/\//i.test(path) ? path : `/storage/${path}`;
+};
+
 export default function PropertiesIndex({ properties, filters, isAdmin, currentUserId }) {
     const [search, setSearch] = useState(filters.search || '');
     const [propertyToDelete, setPropertyToDelete] = useState(null);
@@ -84,7 +89,7 @@ export default function PropertiesIndex({ properties, filters, isAdmin, currentU
                                     {property.images && property.images.length > 0 ? (
                                         <div className="relative h-48 overflow-hidden bg-gray-100">
                                             <img
-                                                src={`/storage/${property.images[0].image_path}`}
+                                                src={imageSource(property.images.find(img => img.is_cover)?.image_path || property.images[0].image_path)}
                                                 alt={property.name}
                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                             />

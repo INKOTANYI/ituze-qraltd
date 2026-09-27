@@ -37,6 +37,8 @@ const formatRent = (unit) => {
 
 const listValues = (value) => (Array.isArray(value) ? value : []);
 
+const imageSource = (path) => (/^https?:\/\//i.test(path) ? path : `/storage/${path}`);
+
 function InquiryModal({ property, unit, channel, onClose }) {
     const form = useForm({
         unit_id: unit?.id || '',
@@ -74,6 +76,7 @@ function InquiryModal({ property, unit, channel, onClose }) {
                         <label className="text-sm font-semibold text-slate-700">Phone / WhatsApp<input required value={form.data.visitor_phone} onChange={(event) => form.setData('visitor_phone', event.target.value)} placeholder="+250..." className="mt-1.5 w-full rounded-xl border-slate-200" /></label>
                     </div>
                     <label className="block text-sm font-semibold text-slate-700">Email (optional)<input type="email" value={form.data.visitor_email} onChange={(event) => form.setData('visitor_email', event.target.value)} className="mt-1.5 w-full rounded-xl border-slate-200" /></label>
+                    {form.errors.visitor_email && <p className="-mt-2 text-sm text-amber-700">{form.errors.visitor_email}</p>}
                     <label className="block text-sm font-semibold text-slate-700">Message<textarea required rows="4" value={form.data.message} onChange={(event) => form.setData('message', event.target.value)} placeholder={`I am interested in ${property.name}...`} className="mt-1.5 w-full rounded-xl border-slate-200" /></label>
                     {form.errors.visitor_phone && <p className="text-sm text-red-600">{form.errors.visitor_phone}</p>}
                     <button disabled={form.processing} className={`flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-bold text-white transition disabled:opacity-60 ${channel === 'whatsapp' ? 'bg-[#168447] hover:bg-[#126b39]' : 'bg-[#0e3b2e] hover:bg-[#175640]'}`}>{form.processing ? 'Sending...' : channel === 'whatsapp' ? 'Send through WhatsApp' : 'Send inquiry to owner'} <Send size={16} /></button>
@@ -106,7 +109,10 @@ export default function PublicProperty({ property }) {
             <div className="min-h-screen bg-[#f8faf9] text-slate-900">
                 <header className="border-b border-slate-200 bg-white">
                     <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-8">
-                        <Link href="/" className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#d49a4d] text-white"><Building2 size={21} /></span><span className="text-xl font-black tracking-tight text-[#0e3b2e]">ituze<span className="text-[#b57c35]">.</span></span></Link>
+                        <Link href="/" className="flex items-center gap-3">
+                            <img src="/images/logo.png" alt="Ituze-Qra Ltd Logo" className="h-10 w-10 rounded-full object-contain bg-white p-0.5 shadow-sm" />
+                            <span className="text-xl font-black tracking-tight text-[#0e3b2e]">Ituze-Qra Ltd</span>
+                        </Link>
                         <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-[#0e3b2e]"><ArrowLeft size={16} /> Browse available spaces</Link>
                     </div>
                 </header>
@@ -115,13 +121,13 @@ export default function PublicProperty({ property }) {
                     <div className="mb-8 flex items-center gap-2 text-sm text-slate-500"><Link href="/" className="transition hover:text-[#0e3b2e]">Home</Link><ChevronRight size={15} /><span>{location}</span><ChevronRight size={15} /><span className="truncate text-slate-800">{property.name}</span></div>
                     <section className="grid gap-3 lg:grid-cols-[1.45fr_.55fr]">
                         <div className="relative h-[22rem] overflow-hidden rounded-[1.5rem] bg-[#dcebe5] sm:h-[32rem]">
-                            {gallery[activeImage]?.image_path ? <img src={`/storage/${gallery[activeImage].image_path}`} alt={property.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><Building2 className="h-24 w-24 text-[#0e3b2e]/20" /></div>}
+                            {gallery[activeImage]?.image_path ? <img src={imageSource(gallery[activeImage].image_path)} alt={property.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><Building2 className="h-24 w-24 text-[#0e3b2e]/20" /></div>}
                             <div className="absolute bottom-5 left-5 rounded-full bg-slate-950/65 px-3 py-1.5 text-xs font-bold text-white backdrop-blur"><Eye size={13} className="mr-1 inline" /> {images.length || 1} photos</div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
                             {[1, 2].map((offset) => {
                                 const image = gallery[(activeImage + offset) % gallery.length];
-                                return <button type="button" key={offset} onClick={() => setActiveImage((activeImage + offset) % gallery.length)} className="relative min-h-36 overflow-hidden rounded-[1.5rem] bg-[#dcebe5] text-left sm:min-h-0">{image?.image_path ? <img src={`/storage/${image.image_path}`} alt="" className="h-full w-full object-cover transition hover:scale-105" /> : <div className="flex h-full items-center justify-center"><Building2 className="h-10 w-10 text-[#0e3b2e]/20" /></div>}</button>;
+                                return <button type="button" key={offset} onClick={() => setActiveImage((activeImage + offset) % gallery.length)} className="relative min-h-36 overflow-hidden rounded-[1.5rem] bg-[#dcebe5] text-left sm:min-h-0">{image?.image_path ? <img src={imageSource(image.image_path)} alt="" className="h-full w-full object-cover transition hover:scale-105" /> : <div className="flex h-full items-center justify-center"><Building2 className="h-10 w-10 text-[#0e3b2e]/20" /></div>}</button>;
                             })}
                         </div>
                     </section>

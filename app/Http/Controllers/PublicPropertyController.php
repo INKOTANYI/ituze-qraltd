@@ -51,11 +51,26 @@ class PublicPropertyController extends Controller
             return back()->withErrors(['unit_id' => 'That available space is no longer listed. Please refresh and try again.']);
         }
 
+        if (!empty($validated['visitor_email'])) {
+            $hasPendingInquiry = PropertyInquiry::query()
+                ->where('owner_id', $property->owner_id)
+                ->whereRaw('LOWER(visitor_email) = ?', [strtolower($validated['visitor_email'])])
+                ->where('status', '!=', 'responded')
+                ->exists();
+
+            if ($hasPendingInquiry) {
+                return back()->withErrors([
+                    'visitor_email' => 'We already have your previous inquiry for this owner. Please wait while our team responds before sending another one.',
+                ]);
+            }
+        }
+
         $inquiry = PropertyInquiry::create([
             ...$validated,
             'unit_id' => $unit->id,
             'property_id' => $property->id,
             'owner_id' => $property->owner_id,
+            'status' => 'pending',
         ]);
 
         $owner = $property->owner;
@@ -75,7 +90,7 @@ class PublicPropertyController extends Controller
             }
 
             app(WhatsAppCloudService::class)->sendText($owner->phone, $whatsappMessage);
-            $inquiry->forceFill(['whatsapp_sent_at' => now(), 'status' => 'new'])->save();
+            $inquiry->forceFill(['whatsapp_sent_at' => now()])->save();
         } catch (RuntimeException $exception) {
             $inquiry->forceFill(['whatsapp_error' => $exception->getMessage()])->save();
             Log::warning('Property inquiry WhatsApp delivery failed.', [
@@ -87,5 +102,17 @@ class PublicPropertyController extends Controller
         }
 
         return back()->with('success', 'Your inquiry was sent to the property owner.');
+    }
+
+    public function markResponded(Request $request, PropertyInquiry $inquiry): RedirectResponse
+    {
+        abort_unless($request->user()->isAdmin() || $inquiry->owner_id === $request->user()->id, 403);
+
+        $inquiry->forceFill([
+            'status' => 'responded',
+            'responded_at' => now(),
+        ])->save();
+
+        return back()->with('success', 'Inquiry marked as responded.');
     }
 }

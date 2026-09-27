@@ -35,10 +35,10 @@ class RegisteredUserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'phone' => ['required', 'regex:/^(078|072|073)\d{7}$/', 'unique:'.User::class],
+            'phone' => ['required', 'regex:/^(072|073|078|079)\d{7}$/', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ], [
-            'phone.regex' => 'Enter a valid 10-digit MTN (078) or Airtel (072/073) number.',
+            'phone.regex' => 'Enter a valid 10-digit Rwanda mobile number (072, 073, 078, or 079).',
         ]);
 
         $user = User::create([
@@ -49,7 +49,7 @@ class RegisteredUserController extends Controller
             'phone' => $request->phone,
             'role' => 'owner',
             'status' => 'pending',
-            'expires_at' => now()->addYear(),
+            'expires_at' => null,
             'password' => Hash::make($request->password),
         ]);
 

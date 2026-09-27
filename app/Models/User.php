@@ -29,6 +29,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'status',
         'expires_at',
         'national_id',
+        'identity_document_type',
+        'address',
         'sector_id',
         'profile_photo',
         'profile_completed',
@@ -102,7 +104,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return $this->expires_at && $this->expires_at->isPast();
+        return !$this->expires_at || $this->expires_at->isPast();
     }
 
     /**

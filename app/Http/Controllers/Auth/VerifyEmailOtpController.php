@@ -17,7 +17,7 @@ class VerifyEmailOtpController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->route('dashboard');
+            return redirect()->route($user->profile_completed ? 'dashboard' : 'profile.complete');
         }
 
         if (! $user->email_otp || $user->email_otp !== $request->otp) {
@@ -34,6 +34,6 @@ class VerifyEmailOtpController extends Controller
             'email_otp_expires_at' => null,
         ])->save();
 
-        return redirect()->route('dashboard');
+        return redirect()->route($user->profile_completed ? 'dashboard' : 'profile.complete');
     }
 }

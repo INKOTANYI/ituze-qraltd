@@ -23,6 +23,7 @@ class UnitTypeSeeder extends Seeder
             ['name' => 'Coffee Shop'],
             ['name' => 'Office'],
             ['name' => 'Shop'],
+            ['name' => 'Commercial Building'],
             ['name' => 'Warehouse'],
         ];
 

@@ -13,14 +13,16 @@ class ProfileCompletionController extends Controller
             $validated = $request->validate(
                 [
                     'national_id'   => 'required|string|max:20',
+                    'identity_document_type' => 'required|in:nida,passport',
+                    'address'       => 'required|string|max:255',
                     'profile_photo' => 'required|image|max:2048',
                     'sector_id'     => 'required|exists:sectors,id',
                 ],
                 // Custom user-friendly error messages instead of Laravel defaults:
                 [
-                    'national_id.required'   => '❌ Please enter your National ID Number.',
-                    'national_id.max'        => '❌ National ID is too long (max 20 characters).',
-                    'national_id.string'     => '❌ National ID must be text.',
+                    'national_id.required'   => 'Please enter your NIDA or passport number.',
+                    'national_id.max'        => 'The identification number must be 20 characters or fewer.',
+                    'national_id.string'     => 'The identification number must be text.',
 
                     'profile_photo.required' => '📸 Please upload a profile photo.',
                     'profile_photo.image'    => '📸 The file you uploaded is not a valid image. Only JPG, PNG, GIF, and WEBP are allowed.',
@@ -35,6 +37,8 @@ class ProfileCompletionController extends Controller
 
             $updated = $request->user()->update([
                 'national_id'       => $validated['national_id'],
+                'identity_document_type' => $validated['identity_document_type'],
+                'address'           => $validated['address'],
                 'profile_photo'     => $path,
                 'sector_id'         => $validated['sector_id'],
                 'profile_completed' => true,

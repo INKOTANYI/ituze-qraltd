@@ -25,7 +25,7 @@ export default function Approvals({ pendingUsers }) {
 
         router.post(
             route(routeName, confirmAction.user.id),
-            {},
+            confirmAction.type === 'approve' ? { payment_verified: true } : {},
             {
                 onFinish: () => {
                     setProcessing(false);
@@ -80,10 +80,18 @@ export default function Approvals({ pendingUsers }) {
                                     <p className="text-sm text-gray-500">
                                         {user.email} · {user.phone}
                                     </p>
+                                    <p className="mt-1 text-xs font-medium text-green-700">
+                                        Email verified · Profile complete
+                                    </p>
+                                    {user.address && (
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Address: {user.address}
+                                        </p>
+                                    )}
                                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-400">
                                         <span className="flex items-center gap-1">
                                             <IdCard size={13} />
-                                            {user.national_id}
+                                            {user.identity_document_type === 'passport' ? 'Passport' : 'NIDA'}: {user.national_id}
                                         </span>
                                         {user.sector && (
                                             <span className="flex items-center gap-1">
@@ -131,7 +139,7 @@ export default function Approvals({ pendingUsers }) {
                 message={
                     confirmAction
                         ? confirmAction.type === 'approve'
-                            ? `${confirmAction.user.name} will be approved as a property owner.`
+                            ? `Confirm that payment was verified outside the app. ${confirmAction.user.name} will then be approved, and their one-year subscription will start today.`
                             : `${confirmAction.user.name} will not be able to access the dashboard. You can reconsider this later.`
                         : ''
                 }
